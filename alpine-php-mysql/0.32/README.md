@@ -10,8 +10,8 @@ This repository contains docker images that are used for App Service Linux. Some
 ## Components
 This docker image currently contains the following components:
 
-1. Alpine (3.7)
-2. PHP (7.1.7)
+1. Alpine (3.8)
+2. PHP (7.2.8)
 3. Apache/Httpd (2.4.33)
 4. MariaDB ( 10.1.32/if using Local Database )
 5. Phpmyadmin ( 4.8.0/if using Local Database )
@@ -51,6 +51,11 @@ DATABASE_PASSWORD | some-string
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version 0.32**
+  1. Upgrade alpine to 3.8.
+  2. Upgrade php to 7.2.8.
+  3. Reduce Size. (80+ M)
+
 - **Version 0.31**
   1. Include the module simpleXML.
   2. Avoid the confuse of different php version, alpine 3.7 supports php 7.1.7 well.

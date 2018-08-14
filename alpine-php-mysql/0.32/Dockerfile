@@ -1,7 +1,7 @@
 #
 # Dockerfile for Apache/PHP/MySQL
 #
-FROM alpine:3.7
+FROM alpine:3.8
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
@@ -40,14 +40,14 @@ ENV DOCKER_BUILD_HOME "/dockerbuild"
 RUN set -x \
 	&& addgroup -g 82 -S www-data \
 	&& adduser -u 82 -D -S -G www-data www-data
-    # ---------------
+	# ---------------
 	# 2. apache httpd
 	# ---------------
 RUN mkdir -p "$DOCKER_BUILD_HOME"
 WORKDIR $DOCKER_BUILD_HOME
 RUN set -x \
     && apk update \
-    && apk add apache2 apache2-ssl\	
+    && apk add apache2 apache2-ssl \
 	# ----------
 	# 3. mariadb
 	# ----------
