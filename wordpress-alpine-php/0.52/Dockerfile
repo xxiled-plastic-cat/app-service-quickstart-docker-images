@@ -1,7 +1,7 @@
 #
 # Dockerfile for WordPress
 #
-FROM leonzhang77/alpine-php-mysql:0.31
+FROM appsvcorg/alpine-php-mysql:0.32
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 
 # ========
@@ -50,6 +50,7 @@ RUN set -ex \
 # =========
 # httpd confs
 COPY httpd-wordpress.conf $HTTPD_CONF_DIR/
+COPY httpd-modules.conf $HTTPD_CONF_DIR/
 
 RUN set -ex \
 	##

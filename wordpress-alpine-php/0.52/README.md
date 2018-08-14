@@ -5,8 +5,8 @@ This is a WordPress Docker image which can run on both [Azure Web App on Linux](
 This docker image currently contains the following components:
 
 1. WordPress
-2. Alpine (3.7)
-3. PHP (7.1.7)
+2. Alpine (3.8)
+3. PHP (7.2.8)
 4. Apache/Httpd (2.4.33)
 5. MariaDB ( 10.1.32/if using Local Database )
 6. Phpmyadmin ( 4.8.0/if using Local Database )
@@ -84,12 +84,21 @@ There is a tradeoff between file server stability and file persistence . Since w
 6. WordPress connects to the Redis server. The connection status appears on the same page.
 7. [More infomation about **Redis Object Cache**](https://wordpress.org/plugins/redis-cache)
 
+## Easily Add Far Future Expiration to Your Static Files
+1. mod_expires is enabled.
+2. Please check [**WP Far Future Expiration Plugin**](https://www.tipsandtricks-hq.com/wordpress-far-future-expiration-plugin-5980)
+
 ## Limitations
 - Some unexpected issues may happen after you scale out your site to multiple instances, if you deploy a WordPress site on Azure with this docker image and use the MariaDB built in this docker image as the database.
 - The phpMyAdmin built in this docker image is available only when you use the MariaDB built in this docker image as the database.
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
 
 ## Change Log
+- **Version 0.52**
+  1. Upgrade alpine to 3.8.
+  2. Upgrade php to 7.2.8.
+  3. Enable mod_expires, support [**WP Far Future Expiration Plugin**](https://www.tipsandtricks-hq.com/wordpress-far-future-expiration-plugin-5980)
+
 - **Version 0.51**
   1. Add PHP simleXML module.
   2. Bind php 7.1.7, avoid confuse of different php versions.  
