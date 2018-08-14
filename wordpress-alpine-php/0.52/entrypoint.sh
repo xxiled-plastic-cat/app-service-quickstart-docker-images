@@ -21,8 +21,7 @@ setup_mariadb_data_dir(){
 }
 
 start_mariadb(){
-    # /etc/init.d/mariadb setup
-    /usr/bin/mysql_install_db --user=mysql --datadir=${MARIADB_DATA_DIR}
+    /etc/init.d/mariadb setup
     rc-service mariadb start 
 
     rm -f /tmp/mysql.sock
