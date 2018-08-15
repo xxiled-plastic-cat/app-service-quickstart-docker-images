@@ -27,42 +27,36 @@ ENV PHPREDIS_VERSION 3.1.2
 # ~. tools
 # --------
 RUN set -ex \
-  && apk update \
-  && apk add --update openssl git net-tools tcpdump tcptraceroute vim curl wget bash\
+    && apk update \
+    && apk add --no-cache openssl git net-tools tcpdump tcptraceroute vim curl wget bash\
 	&& cd /usr/bin \
 	&& wget http://www.vdberg.org/~richard/tcpping \
-	&& chmod 777 tcpping
+	&& chmod 777 tcpping \
 # ========
 # install the PHP extensions we need and xdebug
 # ======== 
-RUN docker-php-source extract \
-  # && curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz \
-  # && tar xfz /tmp/redis.tar.gz \
-  # && rm -r /tmp/redis.tar.gz \
-  # && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis \
-  # && docker-php-ext-install redis \
-  && docker-php-ext-install mysqli \
-  && docker-php-source delete \
-  && curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
-  && chmod +x wp-cli.phar \
-  && mv wp-cli.phar /usr/local/bin/wp \
-  && apk add --update $PHPIZE_DEPS \
-  && pecl install xdebug-beta \
+    && apk add --no-cache --virtual build-dependencies icu-dev \
+    libxml2-dev freetype-dev libpng-dev libjpeg-turbo-dev g++ make autoconf \
+    && docker-php-source extract \
+    && pecl install xdebug-beta \
+    && docker-php-ext-install mysqli \
+    && docker-php-source delete \
+    && apk del build-dependencies \
+    && apk del libmcrypt-dev \
 # ------
 # ssh
 # ------
-  && apk add --update openssh-server \
-  && echo "$SSH_PASSWD" | chpasswd \  
+    && apk add --no-cache openssh-server \
+    && echo "$SSH_PASSWD" | chpasswd \
 # ------
 # mariadb
 # ------
-  && apk add --update mariadb mariadb-client \
+    && apk add --no-cache mariadb mariadb-client \
 #---------------
 # openrc service
 #---------------
-  && apk update && apk add openrc \
- # can't do cgroups
-  && sed -i 's/"cgroup_add_service/" # cgroup_add_service/g' /lib/rc/sh/openrc-run.sh
+   && apk add --no-cache openrc \
+   && sed -i 's/"cgroup_add_service/" # cgroup_add_service/g' /lib/rc/sh/openrc-run.sh
 # ----------
 # Nginx
 # ----------   
@@ -208,7 +202,8 @@ COPY phpMyAdmin.tar.gz $PHPMYADMIN_SOURCE/phpMyAdmin.tar.gz
 RUN set -ex \
 	&& apk update \
 	&& apk upgrade \
-	&& rm -rf /var/cache/apk/* 
+	&& rm -rf /var/cache/apk/* \
+    && rm -rf /tmp/* 
 # =========
 # Configure
 # =========
