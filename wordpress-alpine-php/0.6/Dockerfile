@@ -3,7 +3,6 @@
 #
 FROM appsvcorg/nginx-fpm:0.4
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
-
 # ========
 # ENV vars
 # ========
@@ -41,12 +40,15 @@ RUN set -ex \
 	# ~. tools
 	# --------
     && apk update \
-    && apk add --update redis
+    && apk add --no-cache redis \
+	# wp-cli
+	&& curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar \
+    && chmod +x wp-cli.phar \
+    && mv wp-cli.phar /usr/local/bin/wp \
 	# --------
 	# 1. PHP extensions
 	# -------- 
 	# install the PHP extensions we need
-RUN set -ex \
 	&& docker-php-source extract \
     && curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz \
     && tar xfz /tmp/redis.tar.gz \
@@ -60,7 +62,7 @@ RUN set -ex; \
 	; \
 	\
 	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
-	docker-php-ext-install gd mysqli opcache zip redis; \
+	docker-php-ext-install gd opcache zip redis; \
 	\
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
@@ -93,28 +95,22 @@ RUN set -ex \
 	# ----------
 	&& apk update \
 	&& apk upgrade \
-	&& rm -rf /var/cache/apk/* 
-
+	&& rm -rf /var/cache/apk/* \
+	&& rm -rf /tmp/*
 # =========
 # Configure
 # =========
 # nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
-
-#RUN set -ex \
-#    && ln -s $WORDPRESS_HOME /var/www/wordpress \
-#    && test -e /usr/local/bin/entrypoint.sh && mv /usr/local/bin/entrypoint.sh /usr/local/bin/entrypoint.bak
-	
 # =====
 # final
 # =====
 COPY wp-config.php $WORDPRESS_SOURCE/
 COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 # phpmyadmin
-# COPY phpmyadmin-nginx.conf $PHPMYADMIN_SOURCE/phpmyadmin-nginx.conf
 COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
-
+#
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 EXPOSE 2222 80
