@@ -6,8 +6,8 @@ This docker image currently contains the following components:
 
 1. WordPress
 2. Nginx(1.14.0)
-3. PHP (7.2.7)
-4. MariaDB ( 10.1.26/if using Local Database )
+3. PHP (7.2.8)
+4. MariaDB ( 10.1.32/if using Local Database )
 5. Phpmyadmin ( 4.8.0/if using Local Database )
 
 ## How to configure to use Azure Database for MySQL with web app 
@@ -91,7 +91,7 @@ There is a tradeoff between file server stability and file persistence . Since w
 ## Change Log
 - **Version 0.6**
   1. Change to Nignx+fpm.
-  2. Update version of php to 7.2.7.  
+  2. Update version of php to 7.2.8.  
 
 - **Version 0.51**
   1. Add PHP simleXML module.
