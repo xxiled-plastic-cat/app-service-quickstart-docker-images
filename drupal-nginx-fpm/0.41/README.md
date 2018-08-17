@@ -10,7 +10,7 @@ You can find it in Docker hub here [https://hub.docker.com/r/appsvcorg/drupal-ng
 This docker image currently contains the following components:
 1. Drupal (Git pull as you wish)
 2. nginx (1.14.0)
-3. PHP (7.2.7)
+3. PHP (7.2.8)
 4. Drush
 5. Composer (1.6.1)
 6. MariaDB ( 10.1.26/if using Local Database )
@@ -98,6 +98,9 @@ You can update ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  to enable app s
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 600.
 
 ## Change Log 
+- **Version 0.41**
+  1. Reduce size.
+  2. Update version php-fpm.
 - **Version 0.4**
   1. Base image to alpine, reduce size.
   2. Update version of nginx and php-fpm.
