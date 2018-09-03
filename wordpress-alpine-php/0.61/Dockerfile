@@ -110,7 +110,8 @@ COPY wp-config.php $WORDPRESS_SOURCE/
 COPY uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 # phpmyadmin
 COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
-#
+# nginx
+COPY spec-settings.conf /etc/nginx/conf.d/spec-settings.conf
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 EXPOSE 2222 80
