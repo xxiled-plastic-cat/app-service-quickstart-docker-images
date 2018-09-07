@@ -107,6 +107,8 @@ RUN rm -rf $DOCKER_BUILD_HOME
 # nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
+# opcache
+COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
 # phpmyadmin
 COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
 # =====
