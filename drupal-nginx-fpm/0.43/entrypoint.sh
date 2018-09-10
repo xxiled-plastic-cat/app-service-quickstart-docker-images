@@ -139,6 +139,9 @@ if test ! -e "$DRUPAL_HOME/sites/default/settings.php"; then
     setup_drupal
 fi
 cd $DRUPAL_HOME
+
+echo "Starting Redis ..."
+redis-server &
        
 echo "Starting SSH ..."
 rc-service sshd start

@@ -19,6 +19,8 @@ ENV NGINX_LOG_DIR "/home/LogFiles/nginx"
 ENV PHP_HOME "/usr/local/etc/php"
 ENV PHP_CONF_DIR $PHP_HOME
 ENV PHP_CONF_FILE $PHP_CONF_DIR"/php.ini"
+#redis
+ENV PHPREDIS_VERSION 3.1.2
 # Composer
 # Updation: https://getcomposer.org/download/
 ENV COMPOSER_DOWNLOAD_URL "https://getcomposer.org/installer"
@@ -35,10 +37,21 @@ ENV COMPOSER_SETUP_SHA 544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfd
 RUN mkdir -p $DOCKER_BUILD_HOME
 WORKDIR $DOCKER_BUILD_HOME
 # --------
+# ~. essentials
+# --------
+RUN set -ex \
+    && apk update \
+    && apk add --no-cache redis \
+# --------
 # ~. PHP extensions
 # --------
 # install the PHP extensions we need
 # postgresql-dev is needed for https://bugs.alpinelinux.org/issues/3642
+    && docker-php-source extract \
+    && curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz \
+    && tar xfz /tmp/redis.tar.gz \
+    && rm -r /tmp/redis.tar.gz \
+    && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis
 RUN set -ex \
 	&& apk add --no-cache --virtual .build-deps \
 		coreutils \
@@ -56,6 +69,7 @@ RUN set -ex \
 		pdo_mysql \
 		pdo_pgsql \
 		zip \
+		redis \
 	&& runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
@@ -63,18 +77,8 @@ RUN set -ex \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --virtual .drupal-phpexts-rundeps $runDeps \
-	&& apk del .build-deps
-
-# set recommended PHP.ini settings
-# see https://secure.php.net/manual/en/opcache.installation.php
-RUN { \
-		echo 'opcache.memory_consumption=128'; \
-		echo 'opcache.interned_strings_buffer=8'; \
-		echo 'opcache.max_accelerated_files=4000'; \
-		echo 'opcache.revalidate_freq=60'; \
-		echo 'opcache.fast_shutdown=1'; \
-		echo 'opcache.enable_cli=1'; \
-	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
+	&& apk del .build-deps \	
+	&& docker-php-source delete
 # -------------
 # 1. Drupal
 # -------------
