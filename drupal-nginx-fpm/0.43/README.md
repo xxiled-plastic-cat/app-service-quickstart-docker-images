@@ -98,6 +98,9 @@ You can update ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  to enable app s
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 600.
 
 ## Change Log 
+- **Version 0.43**
+  1. Installed php extension redis, and local redis-server.
+  2. Fix the bug of Drush.
 - **Version 0.42**
   1. Update settings of opcache, more stable.  
 - **Version 0.41**

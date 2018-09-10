@@ -84,19 +84,18 @@ RUN set -ex \
 # -------------
 # Install by Git
 # ----------
-# 2. drush
+# 2. composer
 # ----------
 RUN set -ex \
-    && php -r "readfile('http://files.drush.org/drush.phar');" > /usr/local/bin/drush \
-    && chmod +x /usr/local/bin/drush \
-# ----------
-# 4. composer
-# ----------
-	&& php -r "readfile('https://getcomposer.org/installer');" > /tmp/composer-setup.php \
+    && php -r "readfile('https://getcomposer.org/installer');" > /tmp/composer-setup.php \
     && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) === getenv('COMPOSER_SETUP_SHA')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('/tmp/composer-setup.php'); echo PHP_EOL; exit(1); } echo PHP_EOL;" \
    	&& mkdir -p /composer/bin \
     && php /tmp/composer-setup.php --install-dir=/usr/local/bin/ --filename=composer --version=${COMPOSER_VERSION} \
     && rm /tmp/composer-setup.php \
+# ----------
+# 3. drush
+# ----------
+# Installed in entrypoint.sh    
 # ----------
 # ~. clean up
 # ----------
