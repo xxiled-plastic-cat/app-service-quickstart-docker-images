@@ -4,6 +4,7 @@
 
 php -v
 install_drush(){
+    composer self-update
     composer global require consolidation/cgr 
 	composer_home=$(find / -name .composer)
     ln -s $composer_home/vendor/bin/cgr /usr/local/bin/cgr
@@ -55,41 +56,18 @@ setup_phpmyadmin(){
 	fi
 }
 
-#Get drupal from Git
-setup_drupal(){    
-    cd $DRUPAL_HOME
-	GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/drupalcms-azure}
-	GIT_BRANCH=${GIT_BRANCH:-linuxappservice}
-	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
-	echo "REPO: "$GIT_REPO
-	echo "BRANCH: "$GIT_BRANCH
-	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
-    
-	echo "INFO: Clone from "$GIT_REPO
-    git clone $GIT_REPO $DRUPAL_HOME	
-	if [ "$GIT_BRANCH" != "master" ];then
-		echo "INFO: Checkout to "$GIT_BRANCH
-		git fetch origin
-	    git branch --track $GIT_BRANCH origin/$GIT_BRANCH && git checkout $GIT_BRANCH
-	fi	
-	
-    chmod a+w "$DRUPAL_HOME/sites/default" 
-    mkdir -p "$DRUPAL_HOME/sites/default/files"
-    chmod a+w "$DRUPAL_HOME/sites/default/files"
-	if test ! -e "$DRUPAL_HOME/sites/default/settings.php"; then 
-        #Test this time, after git pull, myabe drupal has already installed in repo.
-        cp "$DRUPAL_HOME/sites/default/default.settings.php" "$DRUPAL_HOME/sites/default/settings.php"
-        chmod a+w "$DRUPAL_HOME/sites/default/settings.php"
-	fi   
+# Generate drupal by composer
+setup_drupal(){	
+	mkdir -p "$DRUPAL_HOME/config/sync"
+    chmod a+w "$DRUPAL_HOME/config/sync"
+    chmod a+w "$DRUPAL_HOME/web/sites/default" 
+    mkdir -p "$DRUPAL_HOME/web/sites/default/files"
+    chmod a+w "$DRUPAL_HOME/web/sites/default/files"
+    # still like to chown in Azure.
+    chown -R www-data:www-data $DRUPAL_HOME     	
 }
 
 install_drush
-
-test ! -d "$DRUPAL_HOME" && echo "INFO: $DRUPAL_HOME not found. creating..." && mkdir -p "$DRUPAL_HOME"
-if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
-    echo "INFO: NOT in Azure, chown for "$DRUPAL_HOME 
-    chown -R www-data:www-data $DRUPAL_HOME
-fi
 
 echo "Setup openrc ..." && openrc && touch /run/openrc/softlevel
 
@@ -127,24 +105,20 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
 fi
 
 # setup Drupal
-if test ! -e "$DRUPAL_HOME/sites/default/settings.php"; then 
+if test ! -e "$DRUPAL_HOME/web/sites/default/settings.php"; then 
 #Test this time, if WEBSITES_ENABLE_APP_SERVICE_STORAGE = true and drupal has already installed.
     echo "Installing Drupal ..."    
-    # If home folder is exist, clean it, ready to git pull
-    while test -d "$DRUPAL_HOME"  
-    do
-        echo "INFO: $DRUPAL_HOME is exist, clean it to ready for git..."
-        rm -rf $DRUPAL_HOME
-    done 
-    test ! -d "$DRUPAL_HOME" && echo "INFO: $DRUPAL_HOME not found. creating..." && mkdir -p "$DRUPAL_HOME"
-    
-    setup_drupal
-
-    if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
-        echo "INFO: NOT in Azure, chown for "$DRUPAL_HOME  
-        chown -R www-data:www-data $DRUPAL_HOME 
+    if test -e "$DRUPAL_HOME/composer.json"; then 
+        cd $DRUPAL_HOME && composer install
+    else
+        while test -d "$DRUPAL_HOME"  
+        do
+            echo "INFO: $DRUPAL_HOME is exist, clean it to ready for git..."
+            mv $DRUPAL_HOME /home/site/bak$(date +%s)
+        done
+        composer create-project drupal-composer/drupal-project:8.x-dev  $DRUPAL_HOME --stability dev --no-interaction
     fi
-    chown -R www-data:www-data /var/www/html
+    setup_drupal    
 fi
 cd $DRUPAL_HOME
 
