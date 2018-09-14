@@ -9,7 +9,7 @@ This repository contains docker images that are used for App Service Linux. Some
 This docker image currently contains the following components:
 
 1. Nginx (1.14.0)   
-2. PHP (7.2.7) 
+2. PHP (7.2.9) 
 3. MariaDB ( 10.1.26/if using Local Database )
 4. Phpmyadmin ( 4.8.0/if using Local Database )
 
@@ -56,6 +56,9 @@ php-fpm -D
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version 0.41** 
+  1. Update version of php to 7.2.9.
+  4. Root directory isn't binded with /home.
 - **Version 0.4** 
   1. Change base image to alpine:3.7, reduce size.
   2. Update version of nginx to 1.14.0.

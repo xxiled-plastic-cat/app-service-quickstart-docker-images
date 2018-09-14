@@ -1,4 +1,4 @@
-FROM php:7.2-fpm-alpine
+FROM php:7.2.9-fpm-alpine3.7
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
@@ -18,9 +18,9 @@ ENV MARIADB_DATA_DIR "/home/data/mysql"
 ENV MARIADB_LOG_DIR "/home/LogFiles/mysql"
 # phpmyadmin
 ENV PHPMYADMIN_SOURCE "/usr/src/phpmyadmin"
-ENV PHPMYADMIN_HOME "/home/phpmyadmin"
+ENV PHPMYADMIN_HOME "/var/www/phpmyadmin"
 #Web Site Home
-ENV HOME_SITE "/home/site/wwwroot"
+ENV HOME_SITE "/var/www/html"
 # redis
 ENV PHPREDIS_VERSION 3.1.2
 # --------
@@ -216,12 +216,12 @@ RUN set -ex\
 	&& ln -s $MARIADB_LOG_DIR /var/log/mysql \
 	##
 	&& rm -rf /var/log/nginx \
-	&& ln -s $NGINX_LOG_DIR /var/log/nginx \
+	&& ln -s $NGINX_LOG_DIR /var/log/nginx
 	##
-    && ln -s ${HOME_SITE} /var/www/html \
+    # && ln -s ${HOME_SITE} /var/www/html \
     ##	
-    && ln -s ${PHPMYADMIN_HOME} /var/www/phpmyadmin
-	
+    # && ln -s ${PHPMYADMIN_HOME} /var/www/phpmyadmin
+#	
 # ssh
 COPY sshd_config /etc/ssh/ 
 # php
@@ -231,13 +231,13 @@ COPY www.conf /usr/local/etc/php/conf.d/www.conf
 # nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 #COPY default.conf /etc/nginx/conf.d/default.conf
-COPY hostingstart.html /home/site/wwwroot/index.html
+COPY hostingstart.html /var/www/html/index.html
 # phpmyadmin
 COPY phpmyadmin-config.inc.php $PHPMYADMIN_SOURCE/
 COPY mariadb.cnf /etc/mysql/
 COPY phpmyadmin-nginx.conf $PHPMYADMIN_SOURCE/phpmyadmin-nginx.conf
 RUN \
-   echo "<?php phpinfo();" > /home/site/wwwroot/index.php 
+   echo "<?php phpinfo();" > /var/www/html/index.php 
 # =====
 # final
 # =====
