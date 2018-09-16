@@ -1,4 +1,4 @@
-FROM appsvcorg/nginx-fpm:0.4
+FROM appsvcorg/nginx-fpm:php7.2.9-local-storage
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
@@ -7,6 +7,7 @@ MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 ENV DOCKER_BUILD_HOME "/dockerbuild"
 # drupal 
 ENV DRUPAL_HOME "/home/site/wwwroot"
+ENV DRUPAL_PRJ "/home/drupal_prj"
 # mariadb
 ENV MARIADB_DATA_DIR "/home/data/mysql"
 ENV MARIADB_LOG_DIR "/home/LogFiles/mysql"
@@ -79,12 +80,9 @@ RUN set -ex \
 	&& apk add --virtual .drupal-phpexts-rundeps $runDeps \
 	&& apk del .build-deps \	
 	&& docker-php-source delete
-# -------------
-# 1. Drupal
-# -------------
-# Install by Git
+#
 # ----------
-# 2. composer
+# 1. composer
 # ----------
 RUN set -ex \
     && php -r "readfile('https://getcomposer.org/installer');" > /tmp/composer-setup.php \
@@ -92,14 +90,23 @@ RUN set -ex \
    	&& mkdir -p /composer/bin \
     && php /tmp/composer-setup.php --install-dir=/usr/local/bin/ --filename=composer --version=${COMPOSER_VERSION} \
     && rm /tmp/composer-setup.php \
+	&& composer self-update \
 # ----------
-# 3. drush
+# 2. drush
 # ----------
-# Installed in entrypoint.sh    
+    && rm -rf /home/.composer && export COMPOSER_HOME='/root/.composer/' \
+    && composer global require consolidation/cgr \
+	&& composer_home=$(find / -name .composer) \
+    && ln -s $composer_home/vendor/bin/cgr /usr/local/bin/cgr \
+	&& cgr drush/drush \
+    && ln -s $composer_home/vendor/bin/drush /usr/local/bin/drush \ 
+# -------------
+# 3. Drupal
+# -------------
+	# Installed by Git Pull
 # ----------
 # ~. clean up
 # ----------
-	&& apk update \
 	&& apk upgrade \
 	&& rm -rf /var/cache/apk/* 
 # =========

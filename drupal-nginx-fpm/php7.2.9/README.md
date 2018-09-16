@@ -10,16 +10,16 @@ You can find it in Docker hub here [https://hub.docker.com/r/appsvcorg/drupal-ng
 This docker image currently contains the following components:
 1. Drupal (Git pull as you wish)
 2. nginx (1.14.0)
-3. PHP (7.2.8)
-4. Drush
-5. Composer (1.6.1)
+3. PHP (7.2.9)
+4. Composer (1.7.2)
+5. Drush (9.4.0)
 6. MariaDB ( 10.1.26/if using Local Database )
 7. Phpmyadmin ( 4.8.0/if using Local Database )
 
 ## How to Deploy to Azure 
-1. Create a Web App for Containers, set Docker container as ```appsvcorg/drupal-nginx-fpm:0.4``` 
+1. Create a Web App for Containers, set Docker container as ```appsvcorg/drupal-nginx-fpm:php7.2.9``` 
    OR: Create a Drupal on Linux Web App With MySQL.
-2. Add one App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` = 600
+2. Add one App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` = 900
 3. Browse your site and wait almost 10 mins, you will see install page of Drupal.
 4. Complete Drupal install.
 
@@ -38,7 +38,7 @@ GIT_BRANCH | linuxappservice
 >
 >Note: ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = false, Before restart web app, need to store your changes by "git push", it will be pulled again after restart.
 >
->Note: ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true, and /home/site/wwwroot/sites/default is exist, it will not pull again after restart.
+>Note: ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true, and /home/site/wwwroot/sites/default/settings.php is exist, it will not pull again after restart.
 
 
 ## How to configure to use Local Database with web app 
@@ -81,7 +81,7 @@ There is a tradeoff between file server stability and file persistence. Choose e
 
 ##### OPTION 1 : 
 Since we are using local storage for better stability for the web app , you will not get file persistence.  In this case , we recommend to follow these steps to update WordPress Core  or a theme or a Plugins version:
-1.	Fork the repo https://github.com/azureappserviceoss/drupalcms-azure
+1.	Fork the repo https://github.com/leonzhang77/drupalcms-azure
 2.	Clone your repo locally and make sure to use ONLY linuxappservice branch
 3.	Download the latest version of Drupal , plugin or theme being used locally
 4.	Commit the latest version bits into local folder of your cloned repo
@@ -91,13 +91,31 @@ Since we are using local storage for better stability for the web app , you will
 
 ##### OPTION 2 :
 You can update ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  to enable app service storage to have file persistence. Note when there are issues with storage  due to networking or when app service platform is being updated, your app can be impacted.
+You can use below composer cmds to install theme/modules. 
+
+[More Informatio](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies):
+```
+cd /home/drupal-prj
+composer require drupal/redis
+composer require drupal/adminimal_theme
+```
+ 
 
 
 ## Limitations
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  as soon as you need files to be persisted.
-- Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 600.
+- Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 1800, suggest to set it as 900 when using this version.
 
 ## Change Log 
+- **php7.2.9**
+  1. Upgrade php version.
+  2. Use 'Git pull' to get drupal project codes, the cost time is much shorter than 'composer create-project' in Azure.
+  3. Please set below 2 parameters. (We will have an offical default repo soon, then it's not necessary to set them.)
+  GIT_REPO = https://github.com/leonzhang77/drupalcms-azure
+  GIT_BRANCH = linuxappservice  
+- **Version 0.43-composer**
+  1. Use "composer create-project" to download latest drupal core.  [More Informatio](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies)
+  2. Update composer by entrypoint.sh, always keep it as latest.  
 - **Version 0.43**
   1. Installed php extension redis, and local redis-server.
   2. Fix the bug of Drush.
