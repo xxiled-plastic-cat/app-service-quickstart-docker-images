@@ -73,10 +73,14 @@ setup_drupal(){
         #Test this time, after git pull, myabe drupal has already installed in repo.
         cp "$DRUPAL_PRJ/web/sites/default/default.settings.php" "$DRUPAL_PRJ/web/sites/default/settings.php"
         chmod a+w "$DRUPAL_PRJ/web/sites/default/settings.php"
+        mv /usr/src/settings.redis.php "$DRUPAL_PRJ/web/sites/default/settings.redis.php"
 	fi
     
     test -d "$DRUPAL_HOME" && mv $DRUPAL_HOME /home/bak/wwwroot_bak$(date +%s)
-    ln -s $DRUPAL_PRJ/web/  $DRUPAL_HOME    	
+    ln -s $DRUPAL_PRJ/web/  $DRUPAL_HOME
+
+    echo "INFO: Composer require drupal/redis..."
+    cd $DRUPAL_PRJ && composer require drupal/redis    	
 }
 
 test ! -d "$DRUPAL_HOME" && echo "INFO: $DRUPAL_HOME not found. creating..." && mkdir -p "$DRUPAL_HOME"
