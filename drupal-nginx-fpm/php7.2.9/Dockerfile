@@ -26,7 +26,6 @@ ENV PHPREDIS_VERSION 3.1.2
 # Updation: https://getcomposer.org/download/
 ENV COMPOSER_DOWNLOAD_URL "https://getcomposer.org/installer"
 ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_HOME /home/.composer
 ENV COMPOSER_VERSION "1.6.1"
 # SHA384SUM https://composer.github.io/installer.sha384sum
 ENV COMPOSER_SETUP_SHA 544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061
@@ -99,7 +98,8 @@ RUN set -ex \
 	&& composer_home=$(find / -name .composer) \
     && ln -s $composer_home/vendor/bin/cgr /usr/local/bin/cgr \
 	&& cgr drush/drush \
-    && ln -s $composer_home/vendor/bin/drush /usr/local/bin/drush \ 
+    && ln -s $composer_home/vendor/bin/drush /usr/local/bin/drush \
+	&& cgr predis/predis \ 
 # -------------
 # 3. Drupal
 # -------------
@@ -121,6 +121,8 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
 # phpmyadmin
 COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
+# redis settings of Drupal
+COPY settings.redis.php /usr/src/settings.redis.php
 # =====
 # final
 # =====
