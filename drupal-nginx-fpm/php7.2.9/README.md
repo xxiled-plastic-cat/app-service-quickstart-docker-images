@@ -73,6 +73,16 @@ chmod 777 /run/php/php7.0-fpm.sock
 ```
 5. Xdebug is turned on.
 
+# Enable redis support 
+1. Deploy to Azure, Complete Drupal install.
+2. Admin -> Extend, set the checkbox of Redis as true, click Install button.
+3. Run below cmd: 
+```
+cd /home/drupal_prj/web/sites/default
+cat settings.redis.php >> settings.php
+```
+4. Refresh Browser, Admin -> Reports -> Status report, REDIS in Checked list, it's connected.
+
 # Updating Drupal version , themes , files 
 
 If ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = false  ( which is the default setting ), we recommend you DO NOT update the Drupal core version, themes or files.
@@ -94,14 +104,12 @@ You can update ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  to enable app s
 You can use below composer cmds to install theme/modules. 
 
 [More Informatio](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies):
+
 ```
 cd /home/drupal-prj
 composer require drupal/redis
 composer require drupal/adminimal_theme
 ```
- 
-
-
 ## Limitations
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  as soon as you need files to be persisted.
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 1800, suggest to set it as 900 when using this version.
@@ -109,10 +117,12 @@ composer require drupal/adminimal_theme
 ## Change Log 
 - **php7.2.9**
   1. Upgrade php version.
-  2. Use 'Git pull' to get drupal project codes, the cost time is much shorter than 'composer create-project' in Azure.
-  3. Please set below 2 parameters. (We will have an offical default repo soon, then it's not necessary to set them.)
-  GIT_REPO = https://github.com/leonzhang77/drupalcms-azure
-  GIT_BRANCH = linuxappservice  
+  2. Include composer require-dev.
+  3. Required drupal/redis and predis/predis by composer.
+  4. Use 'Git pull' to get drupal project codes, the cost time is much shorter than 'composer create-project' in Azure.
+  5. Please set below 2 parameters. (We will have an offical default repo soon, then it's not necessary to set them.)
+  - GIT_REPO = https://github.com/leonzhang77/drupalcms-azure
+  - GIT_BRANCH = composer-redis  
 - **Version 0.43-composer**
   1. Use "composer create-project" to download latest drupal core.  [More Informatio](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies)
   2. Update composer by entrypoint.sh, always keep it as latest.  
