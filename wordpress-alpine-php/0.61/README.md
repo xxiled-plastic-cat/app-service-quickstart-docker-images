@@ -44,11 +44,15 @@ DATABASE_TYPE | local
 DATABASE_USERNAME | wordpress
 DATABASE_PASSWORD | some-string
 >Note: We create a database "azurelocaldb" when using local mysql . Hence use this name when setting up the app
-
+>
+>Note: Phpmyadmin site is deployed when using local mysql. Please go to 
+http://[website]/phpmyadmin, and login with DATABASE_USERNAME and DATABASE_PASSWORD.
+>
 4. Browse your site 
 5. Complete WordPress install
 
 >Note: Do not use the app setting DATABASE_TYPE=local if using Azure database for MySQL
+
 
 ## How to turn on Xdebug
 1. By default Xdebug is turned off as turning it on impacts performance.
