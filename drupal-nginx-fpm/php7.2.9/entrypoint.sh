@@ -11,7 +11,7 @@ setup_mariadb_data_dir(){
     if [ ! -d "$MARIADB_DATA_DIR/mysql" ]; then
 	    echo "INFO: 'mysql' database doesn't exist under $MARIADB_DATA_DIR. So we think $MARIADB_DATA_DIR is empty."
 	    echo "Copying all data files from the original folder /var/lib/mysql to $MARIADB_DATA_DIR ..."
-	    cp -R --no-clobber /var/lib/mysql/. $MARIADB_DATA_DIR
+	    cp -R /var/lib/mysql/. $MARIADB_DATA_DIR
     else
 	    echo "INFO: 'mysql' database already exists under $MARIADB_DATA_DIR."
     fi
@@ -39,7 +39,7 @@ setup_phpmyadmin(){
     test ! -d "$PHPMYADMIN_HOME" && echo "INFO: $PHPMYADMIN_HOME not found. creating..." && mkdir -p "$PHPMYADMIN_HOME"
     cd $PHPMYADMIN_SOURCE
     tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME/ --strip-components=1 
-    cp -R phpmyadmin-default.conf /etc/nginx/conf.d/default.conf   
+    cp -R phpmyadmin-default.conf /etc/nginx/conf.d/default.conf
     cd /
     rm -rf $PHPMYADMIN_SOURCE
 	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
