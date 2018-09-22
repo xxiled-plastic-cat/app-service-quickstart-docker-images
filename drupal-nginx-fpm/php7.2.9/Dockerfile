@@ -117,8 +117,10 @@ RUN rm -rf $DOCKER_BUILD_HOME
 # nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
-# opcache
+# php
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
+COPY www.conf /usr/local/etc/php/conf.d/www.conf
+COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 # phpmyadmin
 COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
 # redis settings of Drupal
