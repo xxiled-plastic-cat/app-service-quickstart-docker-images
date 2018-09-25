@@ -22,13 +22,6 @@ ENV PHP_CONF_DIR $PHP_HOME
 ENV PHP_CONF_FILE $PHP_CONF_DIR"/php.ini"
 #redis
 ENV PHPREDIS_VERSION 3.1.2
-# Composer
-# Updation: https://getcomposer.org/download/
-ENV COMPOSER_DOWNLOAD_URL "https://getcomposer.org/installer"
-ENV COMPOSER_ALLOW_SUPERUSER 1
-ENV COMPOSER_VERSION "1.6.1"
-# SHA384SUM https://composer.github.io/installer.sha384sum
-ENV COMPOSER_SETUP_SHA 544e09ee996cdf60ece3804abc52599c22b1f40f4323403c44d44fdfdd586475ca9813a858088ffbc1f233e9b180f061
 # ====================
 # Download and Install
 # ~. essentials
@@ -84,11 +77,7 @@ RUN set -ex \
 # 1. composer
 # ----------
 RUN set -ex \
-    && php -r "readfile('https://getcomposer.org/installer');" > /tmp/composer-setup.php \
-    && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) === getenv('COMPOSER_SETUP_SHA')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('/tmp/composer-setup.php'); echo PHP_EOL; exit(1); } echo PHP_EOL;" \
-   	&& mkdir -p /composer/bin \
-    && php /tmp/composer-setup.php --install-dir=/usr/local/bin/ --filename=composer --version=${COMPOSER_VERSION} \
-    && rm /tmp/composer-setup.php \
+	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
 	&& composer self-update \
 # ----------
 # 2. drush
