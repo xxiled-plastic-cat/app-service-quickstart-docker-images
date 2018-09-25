@@ -79,9 +79,14 @@ chmod 777 /run/php/php7.0-fpm.sock
 3. Run below cmd: 
 ```
 cd /home/drupal_prj/web/sites/default
+chmod 777 settings.php
 cat settings.redis.php >> settings.php
 ```
 4. Refresh Browser, Admin -> Reports -> Status report, REDIS in Checked list, it's connected.
+
+# Choose Listen Type of php-fpm/nginx
+1. By default, ```LISTEN_TYPE``` = socket.
+2. Update App Setting ```LISTEN_TYPE``` = port if you perfer to listening from TCP/IP.
 
 # Updating Drupal version , themes , files 
 
@@ -122,7 +127,8 @@ composer require drupal/adminimal_theme
   4. Use 'Git pull' to get drupal project codes, the cost time is much shorter than 'composer create-project' in Azure.
   5. Please set below 2 parameters. (We will have an offical default repo soon, then it's not necessary to set them.)
   - GIT_REPO = https://github.com/leonzhang77/drupalcms-azure
-  - GIT_BRANCH = composer-redis  
+  - GIT_BRANCH = composer-redis
+  6. Add selectable listen type of php-fpm/nginx.  
 - **Version 0.43-composer**
   1. Use "composer create-project" to download latest drupal core.  [More Informatio](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies)
   2. Update composer by entrypoint.sh, always keep it as latest.  
