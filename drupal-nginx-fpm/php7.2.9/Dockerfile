@@ -44,14 +44,36 @@ RUN set -ex \
     && curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz \
     && tar xfz /tmp/redis.tar.gz \
     && rm -r /tmp/redis.tar.gz \
-    && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis
-RUN set -ex \
-	&& apk add --no-cache --virtual .build-deps \
-		coreutils \
-		freetype-dev \
-		libjpeg-turbo-dev \
-		libpng-dev \
-		postgresql-dev \
+    && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis \
+	&& apk add --no-cache                  \
+            --virtual .build-dependencies   \
+                $PHPIZE_DEPS                \
+                zlib-dev                    \
+                cyrus-sasl-dev              \
+                git                         \
+                autoconf                    \
+                g++                         \
+                libtool                     \
+                make                        \
+                pcre-dev                    \
+        \
+    && apk add --no-cache                  \
+            tini                            \
+            libintl                         \
+            icu                             \
+            icu-dev                         \
+            libxml2-dev                     \
+            postgresql-dev                  \
+            freetype-dev                    \
+            libjpeg-turbo-dev               \
+            libpng-dev                      \
+            gmp                             \
+            gmp-dev                         \
+            libmemcached-dev                \
+            imagemagick-dev                 \
+            libssh2                         \
+            libssh2-dev                     \
+            libxslt-dev                     \		                  
 	&& docker-php-ext-configure gd \
 		--with-freetype-dir=/usr/include/ \
 		--with-jpeg-dir=/usr/include/ \
@@ -63,6 +85,8 @@ RUN set -ex \
 		pdo_pgsql \
 		zip \
 		redis \
+	&& pecl install apcu \
+	&& docker-php-ext-enable apcu \
 	&& runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
@@ -70,7 +94,7 @@ RUN set -ex \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --virtual .drupal-phpexts-rundeps $runDeps \
-	&& apk del .build-deps \	
+	&& apk del .build-dependencies \	
 	&& docker-php-source delete
 #
 # ----------
@@ -107,6 +131,7 @@ RUN rm -rf $DOCKER_BUILD_HOME
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
 # php
+COPY php.ini /usr/local/etc/php/php.ini
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
 COPY www.conf /usr/local/etc/php/conf.d/www.conf
 COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
