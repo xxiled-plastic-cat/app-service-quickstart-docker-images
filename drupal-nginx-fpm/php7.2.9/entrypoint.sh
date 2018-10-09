@@ -52,7 +52,7 @@ setup_phpmyadmin(){
 setup_drupal(){	
 	cd $DRUPAL_PRJ
 	GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/drupalcms-azure}
-	GIT_BRANCH=${GIT_BRANCH:-linuxappservice}
+	GIT_BRANCH=${GIT_BRANCH:-linuxappservice-composer}
 	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
 	echo "REPO: "$GIT_REPO
 	echo "BRANCH: "$GIT_BRANCH
