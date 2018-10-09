@@ -8,6 +8,11 @@ A simple Python Django application running in a Docker container. The custom ima
 - Add an App Setting ```WEBSITE_PORT = 8000 ``` for your app 
 - Browse your site 
  
+# Components
+This docker image currently contains the following components:
+- Python 3.7
+- Django 2.1.2
+
 # Contributing
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a

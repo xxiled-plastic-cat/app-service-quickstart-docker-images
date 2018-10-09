@@ -1,11 +1,11 @@
 
-FROM python:3.4
+FROM python:3.7-slim
 
 RUN mkdir /code
 WORKDIR /code
 ADD requirements.txt /code/
+RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-ADD . /code/
 
 # ssh
 ENV SSH_PASSWD "root:Docker!"
