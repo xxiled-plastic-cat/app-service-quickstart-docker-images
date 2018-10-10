@@ -34,7 +34,7 @@ WORKDIR $DOCKER_BUILD_HOME
 # --------
 RUN set -ex \
     && apk update \
-    && apk add --no-cache redis \
+    && apk add --no-cache redis varnish\
 # --------
 # ~. PHP extensions
 # --------
@@ -55,9 +55,7 @@ RUN set -ex \
                 g++                         \
                 libtool                     \
                 make                        \
-                pcre-dev                    \
-        \
-    && apk add --no-cache                  \
+                pcre-dev                    \    
             tini                            \
             libintl                         \
             icu                             \
@@ -95,12 +93,11 @@ RUN set -ex \
 	)" \
 	&& apk add --virtual .drupal-phpexts-rundeps $runDeps \
 	&& apk del .build-dependencies \	
-	&& docker-php-source delete
+	&& docker-php-source delete \
 #
 # ----------
 # 1. composer
 # ----------
-RUN set -ex \
 	&& curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
 	&& composer self-update \
 # ----------
@@ -129,7 +126,7 @@ WORKDIR $DRUPAL_HOME
 RUN rm -rf $DOCKER_BUILD_HOME
 # nginx
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY default.conf /etc/nginx/conf.d/default.conf
+RUN rm -rf /etc/nginx/conf.d/default.conf
 # php
 COPY php.ini /usr/local/etc/php/php.ini
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
@@ -139,6 +136,8 @@ COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
 # redis settings of Drupal
 COPY settings.redis.php /usr/src/settings.redis.php
+# Varinish
+COPY default.vcl /etc/varnish/default.vcl
 # =====
 # final
 # =====

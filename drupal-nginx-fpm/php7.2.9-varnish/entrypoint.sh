@@ -39,7 +39,7 @@ setup_phpmyadmin(){
     test ! -d "$PHPMYADMIN_HOME" && echo "INFO: $PHPMYADMIN_HOME not found. creating..." && mkdir -p "$PHPMYADMIN_HOME"
     cd $PHPMYADMIN_SOURCE
     tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME/ --strip-components=1 
-    cp -R phpmyadmin-default.conf /etc/nginx/conf.d/default.conf
+    cp -R phpmyadmin-default.conf /etc/nginx/nginx.conf
     cd /
     rm -rf $PHPMYADMIN_SOURCE
 	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
@@ -52,7 +52,7 @@ setup_phpmyadmin(){
 setup_drupal(){	
 	cd $DRUPAL_PRJ
 	GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/drupalcms-azure}
-	GIT_BRANCH=${GIT_BRANCH:-linuxappservice}
+	GIT_BRANCH=${GIT_BRANCH:-linuxappservice-composer}
 	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
 	echo "REPO: "$GIT_REPO
 	echo "BRANCH: "$GIT_BRANCH
@@ -174,6 +174,9 @@ php-fpm -D
 if [ "${LISTEN_TYPE}" == "socket" ]; then  
     chmod 777 /run/php/php7.0-fpm.sock
 fi
+
+echo "Starting Varnishd ..."
+/usr/sbin/varnishd -a :80 -f /etc/varnish/default.vcl
 
 echo "Starting Nginx ..."
 mkdir -p /home/LogFiles/nginx
