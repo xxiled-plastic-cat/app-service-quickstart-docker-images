@@ -38,7 +38,7 @@ setup_phpmyadmin(){
     cd $PHPMYADMIN_SOURCE
     tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME --strip-components=1
     cp -R phpmyadmin-config.inc.php $PHPMYADMIN_HOME/config.inc.php
-	cp -R phpmyadmin-nginx.conf /etc/nginx/nginx.conf
+	cp -R phpmyadmin-default.conf /etc/nginx/nginx.conf
 	cd /
     rm -rf $PHPMYADMIN_SOURCE
 	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
@@ -99,7 +99,6 @@ echo "Starting SSH ..."
 rc-service sshd start
 
 echo "Starting php-fpm ..."
-#service php7.0-fpm start
 php-fpm -D
 chmod 777 /run/php/php7.0-fpm.sock
 
@@ -109,6 +108,3 @@ if test ! -e /home/LogFiles/nginx/error.log; then
     touch /home/LogFiles/nginx/error.log
 fi
 /usr/sbin/nginx -g "daemon off;"
-#/usr/sbin/nginx
-
-

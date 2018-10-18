@@ -56,6 +56,8 @@ php-fpm -D
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version php7.2.11** 
+  1. Update version of php to 7.2.1.
 - **Version 0.41** 
   1. Update version of php to 7.2.9.
   4. Root directory isn't binded with /home.

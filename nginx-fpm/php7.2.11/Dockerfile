@@ -1,4 +1,4 @@
-FROM php:7.2.9-fpm-alpine3.7
+FROM php:7.2.11-fpm-alpine3.7
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
@@ -9,7 +9,6 @@ ENV SSH_PASSWD "root:Docker!"
 ENV NGINX_VERSION 1.14.0
 ENV NGINX_LOG_DIR "/home/LogFiles/nginx"
 #php
-#/usr/local/etc/php/php.ini
 ENV PHP_HOME "/usr/local/etc/php"
 ENV PHP_CONF_DIR $PHP_HOME
 ENV PHP_CONF_FILE $PHP_CONF_DIR"/php.ini"
@@ -21,8 +20,7 @@ ENV PHPMYADMIN_SOURCE "/usr/src/phpmyadmin"
 ENV PHPMYADMIN_HOME "/var/www/phpmyadmin"
 #Web Site Home
 ENV HOME_SITE "/var/www/html"
-# redis
-ENV PHPREDIS_VERSION 3.1.2
+
 # --------
 # ~. tools
 # --------
@@ -228,6 +226,7 @@ COPY sshd_config /etc/ssh/
 COPY php.ini /usr/local/etc/php/php.ini
 COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 COPY www.conf /usr/local/etc/php/conf.d/www.conf
+COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 # nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 #COPY default.conf /etc/nginx/conf.d/default.conf
@@ -235,7 +234,7 @@ COPY hostingstart.html /var/www/html/index.html
 # phpmyadmin
 COPY phpmyadmin-config.inc.php $PHPMYADMIN_SOURCE/
 COPY mariadb.cnf /etc/mysql/
-COPY phpmyadmin-nginx.conf $PHPMYADMIN_SOURCE/phpmyadmin-nginx.conf
+COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
 RUN \
    echo "<?php phpinfo();" > /var/www/html/index.php 
 # =====
