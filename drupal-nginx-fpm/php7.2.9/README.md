@@ -125,10 +125,7 @@ composer require drupal/adminimal_theme
   2. Include composer require-dev.
   3. Required drupal/redis and predis/predis by composer.
   4. Use 'Git pull' to get drupal project codes, the cost time is much shorter than 'composer create-project' in Azure.
-  5. Please set below 2 parameters. (We will have an offical default repo soon, then it's not necessary to set them.)
-  - GIT_REPO = https://github.com/leonzhang77/drupalcms-azure
-  - GIT_BRANCH = composer-redis
-  6. Add selectable listen type of php-fpm/nginx.  
+  5. Add selectable listen type of php-fpm/nginx.  
 - **Version 0.43-composer**
   1. Use "composer create-project" to download latest drupal core.  [More Informatio](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies)
   2. Update composer by entrypoint.sh, always keep it as latest.  
