@@ -10,9 +10,9 @@ You can find it in Docker hub here [https://hub.docker.com/r/appsvcorg/drupal-ng
 This docker image currently contains the following components:
 1. Drupal (Git pull as you wish)
 2. nginx (1.14.0)
-3. PHP (7.2.8)
+3. PHP (7.2.11)
 4. Drush
-5. Composer (1.6.1)
+5. Composer (1.7.2)
 6. MariaDB ( 10.1.26/if using Local Database )
 7. Phpmyadmin ( 4.8.0/if using Local Database )
 
@@ -98,6 +98,14 @@ You can update ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  to enable app s
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 600.
 
 ## Change Log 
+- **Version 0.44**
+  1. Update Version of PHP to 7.2.11.
+  2. Increase php max excute time and memory size.
+  3. Update Version of Composer to 1.72.1.
+  4. Abandon Redis from this version.
+- **Version 0.43-composer**
+  1. Use "composer create-project" to download latest drupal core.  [More Informatio](https://www.drupal.org/docs/develop/using-composer/using-composer-to-manage-drupal-site-dependencies)
+  2. Update composer by entrypoint.sh, always keep it as latest.  
 - **Version 0.43**
   1. Installed php extension redis, and local redis-server.
   2. Fix the bug of Drush.

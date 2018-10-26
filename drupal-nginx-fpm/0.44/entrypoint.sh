@@ -3,13 +3,6 @@
 # set -e
 
 php -v
-install_drush(){
-    composer global require consolidation/cgr 
-	composer_home=$(find / -name .composer)
-    ln -s $composer_home/vendor/bin/cgr /usr/local/bin/cgr
-	cgr drush/drush 
-    ln -s $composer_home/vendor/bin/drush /usr/local/bin/drush
-}
 
 setup_mariadb_data_dir(){
     test ! -d "$MARIADB_DATA_DIR" && echo "INFO: $MARIADB_DATA_DIR not found. creating ..." && mkdir -p "$MARIADB_DATA_DIR"
@@ -83,8 +76,6 @@ setup_drupal(){
 	fi   
 }
 
-install_drush
-
 test ! -d "$DRUPAL_HOME" && echo "INFO: $DRUPAL_HOME not found. creating..." && mkdir -p "$DRUPAL_HOME"
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
     echo "INFO: NOT in Azure, chown for "$DRUPAL_HOME 
@@ -147,9 +138,6 @@ if test ! -e "$DRUPAL_HOME/sites/default/settings.php"; then
     chown -R www-data:www-data /var/www/html
 fi
 cd $DRUPAL_HOME
-
-echo "Starting Redis ..."
-redis-server &
        
 echo "Starting SSH ..."
 rc-service sshd start
