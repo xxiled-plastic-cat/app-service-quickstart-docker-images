@@ -16,7 +16,7 @@ setup_mariadb_data_dir(){
 	    echo "INFO: 'mysql' database already exists under $MARIADB_DATA_DIR."
     fi
 
-    rm -rf /var/lib/mysql
+    rm -Rf /var/lib/mysql
     ln -s $MARIADB_DATA_DIR /var/lib/mysql
     chown -R mysql:mysql $MARIADB_DATA_DIR
     test ! -d /run/mysqld && echo "INFO: /run/mysqld not found. creating ..." && mkdir -p /run/mysqld
@@ -43,7 +43,7 @@ setup_phpmyadmin(){
     cp -R phpmyadmin-config.inc.php $PHPMYADMIN_HOME/config.inc.php
     cp -R default.phpmyadmin.vcl /etc/varnish/default.vcl
     cd /
-    rm -rf $PHPMYADMIN_SOURCE
+    rm -Rf $PHPMYADMIN_SOURCE
 	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
         echo "INFO: NOT in Azure, chown for "$PHPMYADMIN_HOME  
         chown -R www-data:www-data $PHPMYADMIN_HOME
@@ -51,8 +51,15 @@ setup_phpmyadmin(){
 }
 
 #Get drupal from Git
-setup_drupal(){	
-	cd $DRUPAL_PRJ
+setup_drupal(){
+    while test -d "$DRUPAL_PRJ"  
+    do
+        echo "INFO: $DRUPAL_PRJ is exist, clean it ..."
+        # mv is faster than rm.    
+        mv $DRUPAL_PRJ /home/bak/drupal_prj_bak$(date +%s)
+    done
+    # test ! -d "$DRUPAL_PRJ" && echo "INFO: $DRUPAL_PRJ not found. creating..." && mkdir -p "$DRUPAL_PRJ"	
+	# cd $DRUPAL_PRJ
 	GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/drupalcms-composer-azure}
 	GIT_BRANCH=${GIT_BRANCH:-master}
 	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
@@ -66,26 +73,40 @@ setup_drupal(){
 		echo "INFO: Checkout to "$GIT_BRANCH
 		git fetch origin
 	    git branch --track $GIT_BRANCH origin/$GIT_BRANCH && git checkout $GIT_BRANCH
-	fi	
-	
-    chmod a+w "$DRUPAL_PRJ/web/sites/default" 
-    mkdir -p "$DRUPAL_PRJ/web/sites/default/files"
-    chmod a+w "$DRUPAL_PRJ/web/sites/default/files"
-	if test ! -e "$DRUPAL_PRJ/web/sites/default/settings.php"; then 
-        #Test this time, after git pull, myabe drupal has already installed in repo.
-        cp "$DRUPAL_PRJ/web/sites/default/default.settings.php" "$DRUPAL_PRJ/web/sites/default/settings.php"
-        chmod a+w "$DRUPAL_PRJ/web/sites/default/settings.php"
-        # mv /usr/src/settings.redis.php "$DRUPAL_PRJ/web/sites/default/settings.redis.php"
 	fi
-    
-    test -d "$DRUPAL_HOME" && mv $DRUPAL_HOME /home/bak/wwwroot_bak$(date +%s)
-    ln -s $DRUPAL_PRJ/web/  $DRUPAL_HOME
 
-    # echo "INFO: Composer require drupal/redis..."
-    # cd $DRUPAL_PRJ && composer require drupal/redis    	
+    # restore old site to drupal project
+    if [ -d /home/bak/drupal_site ]; then 
+        echo "INFO: Restore old version site ..."
+        while test -d "$DRUPAL_PRJ/web"  
+        do
+            # mv is faster than rm.
+            mv $DRUPAL_PRJ/web /home/bak/drupal_prj_web_bak$(date +%s)            
+        done
+        mv /home/bak/drupal_site $DRUPAL_PRJ/web/
+    fi
+        
+    chmod a+w "$DRUPAL_PRJ/web/sites/default" 
+    if [ -e "$DRUPAL_PRJ/web/sites/default/settings.php" ]; then 
+        #Test this time, if application settings are set to a personal git, myabe drupal has already installed in repo.
+        echo "INFO: Settings.php is exist..."    
+    else
+        echo "INFO: Settings.php isn't exist..."    
+        mkdir -p "$DRUPAL_PRJ/web/sites/default/files"
+        cp "$DRUPAL_PRJ/web/sites/default/default.settings.php" "$DRUPAL_PRJ/web/sites/default/settings.php"
+    fi
+    chmod a+w "$DRUPAL_PRJ/web/sites/default/files"
+    chmod a+w "$DRUPAL_PRJ/web/sites/default/settings.php"
+    while test -d "$DRUPAL_HOME"  
+    do
+        echo "INFO: $DRUPAL_HOME is exist, clean it ..."        
+        chmod 777 -R $DRUPAL_HOME 
+        rm -rf $DRUPAL_HOME
+    done
+    ln -s $DRUPAL_PRJ/web  $DRUPAL_HOME           	
 }
 
-test ! -d "$DRUPAL_HOME" && echo "INFO: $DRUPAL_HOME not found. creating..." && mkdir -p "$DRUPAL_HOME"
+# test ! -d "$DRUPAL_HOME" && echo "INFO: $DRUPAL_HOME not found. creating..." && mkdir -p "$DRUPAL_HOME"
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
     echo "INFO: NOT in Azure, chown for "$DRUPAL_HOME 
     chown -R www-data:www-data $DRUPAL_HOME
@@ -120,27 +141,39 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
 fi
 
 # setup Drupal
-mkdir -p /home/bak
-if test ! -e "$DRUPAL_HOME/sites/default/settings.php"; then 
-#Test this time, if WEBSITES_ENABLE_APP_SERVICE_STORAGE = true and drupal has already installed.
-    echo "Installing Drupal ..."
-    while test -d "$DRUPAL_PRJ"  
-    do
-        echo "INFO: $DRUPAL_PRJ is exist, clean it ..."        
-        mv $DRUPAL_PRJ /home/bak/drupal_prj_bak$(date +%s)
-    done
-    test ! -d "$DRUPAL_PRJ" && echo "INFO: $DRUPAL_PRJ not found. creating..." && mkdir -p "$DRUPAL_PRJ"    
-    setup_drupal
 
-    if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
-        echo "INFO: NOT in Azure, chown for "$DRUPAL_PRJ  
-        chown -R www-data:www-data $DRUPAL_PRJ 
-    fi
+if [ -e "$DRUPAL_HOME/sites/default/settings.php" ]; then
+# Site is exist.
+    if [ -d "$DRUPAL_PRJ" ]; then
+    # site is exist and is built by composer build, no need to git pull again.
+        echo "INFO: $DRUPAL_PRJ is exist..."        
+        echo "INFO: Site is Ready..."
+    else
+    # site is exist and it's not built by composer build, backup it at first.
+        echo "INFO: Old Version Site is exist, Backup Site..."        
+        if [ -d /home/bak/drupal_site ]; then
+            mv /home/bak/drupal_site /home/bak/drupal_site$(date +%s)
+        else            
+            mkdir -p /home/bak
+        fi
+        mv $DRUPAL_HOME /home/bak/drupal_site
+        echo "Installing Drupal ..."    
+        setup_drupal  
+    fi    
+else
+# drupal isn't installed, fresh start
+    echo "Installing Drupal ..."    
+    setup_drupal   
+fi
+
+if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
+    echo "INFO: NOT in Azure, chown for "$DRUPAL_PRJ  
+    chown -R www-data:www-data $DRUPAL_PRJ 
 fi
 
 # Set php-fpm listen type
 # By default, It's socket.
-# otherwise, It's port.
+# LISTEN_TYPE==port, It's port.
 LISTEN_TYPE=${LISTEN_TYPE:-socket}
 LISTEN_TYPE=$(echo ${LISTEN_TYPE}|tr '[A-Z]' '[a-z]')
 if [ "${LISTEN_TYPE}" == "socket" ]; then  
@@ -162,9 +195,6 @@ fi
 
 
 cd $DRUPAL_HOME
-
-# echo "Starting Redis ..."
-# redis-server &
        
 echo "Starting SSH ..."
 rc-service sshd start
