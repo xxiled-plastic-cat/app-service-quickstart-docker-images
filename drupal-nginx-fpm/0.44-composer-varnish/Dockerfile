@@ -48,6 +48,7 @@ RUN set -ex \
 WORKDIR $DRUPAL_HOME
 RUN rm -rf $DOCKER_BUILD_HOME
 # nginx
+COPY spec-settings.conf /etc/nginx/conf.d/spec-settings.conf
 COPY nginx.conf /etc/nginx/nginx.conf
 RUN rm -rf /etc/nginx/conf.d/default.conf
 # php
