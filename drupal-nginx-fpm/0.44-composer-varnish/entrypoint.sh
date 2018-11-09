@@ -68,7 +68,7 @@ setup_drupal(){
 	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
     
 	echo "INFO: Clone from "$GIT_REPO
-    git clone $GIT_REPO $DRUPAL_PRJ	
+    git clone $GIT_REPO $DRUPAL_PRJ	&& cd $DRUPAL_PRJ
 	if [ "$GIT_BRANCH" != "master" ];then
 		echo "INFO: Checkout to "$GIT_BRANCH
 		git fetch origin
