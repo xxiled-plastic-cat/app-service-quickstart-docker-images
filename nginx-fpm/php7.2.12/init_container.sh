@@ -23,14 +23,30 @@ setup_mariadb_data_dir(){
 }
 
 start_mariadb(){
-    /etc/init.d/mariadb setup
-    rc-service mariadb start
+    if test ! -e /run/mysqld/mysqld.sock; then 
+        touch /run/mysqld/mysqld.sock
+    fi
+    chmod 777 /run/mysqld/mysqld.sock
+    mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+    /usr/bin/mysqld --user=mysql &
+    # make sure mysql service is started...
+    port=`netstat -nlt|grep 3306|wc -l`
+    process=`ps -ef |grep mysql|grep -v grep |wc -l`
+    try_count=1
 
-    rm -f /tmp/mysql.sock
-    ln -s /var/run/mysqld/mysqld.sock /tmp/mysql.sock
-
-    # create default database 'azurelocaldb'
-    mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"
+    while [ $try_count -le 10 ]
+    do 
+        if [ $port -eq 1 ] && [ $process -eq 1 ]; then 
+            echo "INFO: MariaDB is running... "            
+            break
+        else            
+            echo "INFO: Haven't found MariaDB Service this time, Wait 10s, try again..."
+            sleep 10s
+            let try_count+=1
+            port=`netstat -nlt|grep 3306|wc -l`
+            process=`ps -ef |grep mysql|grep -v grep |wc -l`    
+        fi
+    done    
 }
 #unzip phpmyadmin
 setup_phpmyadmin(){
@@ -38,7 +54,7 @@ setup_phpmyadmin(){
     cd $PHPMYADMIN_SOURCE
     tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME --strip-components=1
     cp -R phpmyadmin-config.inc.php $PHPMYADMIN_HOME/config.inc.php
-	cp -R phpmyadmin-default.conf /etc/nginx/nginx.conf
+	cp -R phpmyadmin-default.conf /etc/nginx/conf.d/default.conf
 	cd /
     rm -rf $PHPMYADMIN_SOURCE
 	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
@@ -48,7 +64,7 @@ setup_phpmyadmin(){
 }
 
 # setup server root
-test ! -d "$HOME_SITE" && echo "INFO: $HOME_SITE not found. creating..." && mkdir -p "$HOME_SITE"
+test ! -d "$HOME_SITE" && echo "INFO: $HOME_SITE not found. creating..." && mkdir -p $HOME_SITE
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
     echo "INFO: NOT in Azure, chown for "$HOME_SITE  
     chown -R www-data:www-data $HOME_SITE 
@@ -84,7 +100,8 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     chown -R mysql:mysql $MARIADB_LOG_DIR
     echo "Starting local MariaDB ..."
     start_mariadb
-
+    echo "Installing phpMyAdmin ..."
+    setup_phpmyadmin
     echo "Granting user for phpMyAdmin ..."
     # Set default value of username/password if they are't exist/null.
     DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
@@ -92,19 +109,28 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     echo "phpmyadmin username: "$DATABASE_USERNAME    
     echo "phpmyadmin password: "$DATABASE_PASSWORD    
     mysql -u root -e "GRANT ALL ON *.* TO \`$DATABASE_USERNAME\`@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD' WITH GRANT OPTION; FLUSH PRIVILEGES;"
-    echo "Installing phpMyAdmin ..."
-    setup_phpmyadmin
+    # create default database 'azurelocaldb'
+    mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"
 fi        
-echo "Starting SSH ..."
-rc-service sshd start
+
+test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
+if [ ! -e "$NGINX_LOG_DIR/php-error.log" ]; then    
+    touch $NGINX_LOG_DIR/php-error.log;    
+fi
+chmod 666 $NGINX_LOG_DIR/php-error.log;
 
 echo "Starting php-fpm ..."
 php-fpm -D
 chmod 777 /run/php/php7.0-fpm.sock
 
+echo "Start crond"
+crond
+
+test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
+
+echo "Starting SSH ..."
 echo "Starting Nginx ..."
-mkdir -p /home/LogFiles/nginx
-if test ! -e /home/LogFiles/nginx/error.log; then 
-    touch /home/LogFiles/nginx/error.log
-fi
-/usr/sbin/nginx -g "daemon off;"
+
+cd /usr/bin/
+supervisord -c /etc/supervisord.conf
+

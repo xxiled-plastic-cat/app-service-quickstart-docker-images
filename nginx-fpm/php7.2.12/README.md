@@ -9,9 +9,9 @@ This repository contains docker images that are used for App Service Linux. Some
 This docker image currently contains the following components:
 
 1. Nginx (1.14.0)   
-2. PHP (7.2.9) 
+2. PHP (7.2.12) 
 3. MariaDB ( 10.1.26/if using Local Database )
-4. Phpmyadmin ( 4.8.0/if using Local Database )
+4. Phpmyadmin ( 4.8.3/if using Local Database )
 
 # How to Deploy to Azure 
 1. Create a Web App for Containers 
@@ -50,26 +50,39 @@ php-fpm -D
 ```
 5. Xdebug is turned on.
 
+# How to update config files of nginx
+1. Go to "/etc/nginx", update config files as your wish. 
+5. Reload by below cmd: 
+```
+/usr/sbin/nginx -s reload
+```
+
 ## Limitations
 - Some unexpected issues may happen after you scale out your site to multiple instances, if you deploy a site on Azure with this docker image and use the MariaDB built in this docker image as the database.
 - The phpMyAdmin built in this docker image is available only when you use the MariaDB built in this docker image as the database.
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version php7.2.12** 
+  1. Upgrade version of alpine to 3.8.
+  2. Upgrade version of php to 7.2.12.
+  3. Upgrade version of phpmyadmin to 4.8.3.
+  4. Add Log rotate.
+  5. Add supervisor, keep watching nginx thread.
 - **Version php7.2.11** 
-  1. Update version of php to 7.2.1.
+  1. Upgrade version of php to 7.2.11.
 - **Version 0.41** 
-  1. Update version of php to 7.2.9.
+  1. Upgrade version of php to 7.2.9.
   4. Root directory isn't binded with /home.
 - **Version 0.4** 
   1. Change base image to alpine:3.7, reduce size.
-  2. Update version of nginx to 1.14.0.
-  3. Update version of php to 7.2.7.
-  4. Update the conf of php-fpm, pass env parameters to php codes.
+  2. Upgrade version of nginx to 1.14.0.
+  3. Upgrade version of php to 7.2.7.
+  4. Upgrade the conf of php-fpm, pass env parameters to php codes.
 - **Version 0.3** 
   1. Add Xdebug.
-  2. Update version of nginx to 1.13.11.
-  3. Update version of phpmyadmin to 4.8.0.
+  2. Upgrade version of nginx to 1.13.11.
+  3. Upgrade version of phpmyadmin to 4.8.0.
 - **Version 0.2** 
   1. Supports local MySQL.
   2. Create default database - azurelocaldb.(You need set DATABASE_TYPE to **"local"**)
