@@ -58,8 +58,8 @@ setup_drupal(){
         # mv is faster than rm.    
         mv $DRUPAL_PRJ /home/bak/drupal_prj_bak$(date +%s)
     done
-    # test ! -d "$DRUPAL_PRJ" && echo "INFO: $DRUPAL_PRJ not found. creating..." && mkdir -p "$DRUPAL_PRJ"	
-	# cd $DRUPAL_PRJ
+    test ! -d "$DRUPAL_PRJ" && echo "INFO: $DRUPAL_PRJ not found. creating..." && mkdir -p "$DRUPAL_PRJ"	
+	cd $DRUPAL_PRJ
 	GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/drupalcms-composer-azure}
 	GIT_BRANCH=${GIT_BRANCH:-master}
 	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
@@ -74,6 +74,15 @@ setup_drupal(){
 		git fetch origin
 	    git branch --track $GIT_BRANCH origin/$GIT_BRANCH && git checkout $GIT_BRANCH
 	fi
+
+    if [ $DATABASE_USERNAME ]; then
+        #cd $DRUPAL_PRJ/web/core/lib/Drupal/Core/Database/Installing
+        echo "INFO: Setting of DATABASE ..."
+        mkdir -p /home/bak
+        mv $DRUPAL_PRJ/web/core/lib/Drupal/Core/Database/Install/Tasks.php /home/bak/Tasks$(date +%s).php        
+        cp $DRUPAL_SOURCE/drupal-database-install-tasks.php $DRUPAL_PRJ/web/core/lib/Drupal/Core/Database/Install/Tasks.php 
+        # cd $DRUPAL_PRJ/
+    fi
 
     # restore old site to drupal project
     if [ -d /home/bak/drupal_site ]; then 
@@ -133,9 +142,16 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     # Set default value of username/password if they are't exist/null.
     DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
     DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
+    DATABASE_HOST=${DATABASE_HOST:-localhost}
+    DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}
     echo "phpmyadmin username: "$DATABASE_USERNAME    
-    echo "phpmyadmin password: "$DATABASE_PASSWORD    
+    echo "phpmyadmin password: "$DATABASE_PASSWORD 
+    export DATABASE_HOST
+    export DATABASE_NAME
+    export DATABASE_USERNAME
+    export DATABASE_PASSWORD   
     mysql -u root -e "GRANT ALL ON *.* TO \`$DATABASE_USERNAME\`@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD' WITH GRANT OPTION; FLUSH PRIVILEGES;"
+     
     echo "Installing phpMyAdmin ..."
     setup_phpmyadmin
 fi

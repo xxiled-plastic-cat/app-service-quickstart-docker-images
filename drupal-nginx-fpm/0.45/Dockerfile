@@ -14,6 +14,8 @@ ENV MARIADB_LOG_DIR "/home/LogFiles/mysql"
 # phpmyadmin
 ENV PHPMYADMIN_SOURCE "/usr/src/phpmyadmin"
 ENV PHPMYADMIN_HOME "/home/phpmyadmin"
+# drupal
+ENV DRUPAL_SOURCE "/usr/src/drupal"
 #nginx
 ENV NGINX_LOG_DIR "/home/LogFiles/nginx"
 #php
@@ -36,7 +38,7 @@ RUN set -ex \
 # -------------
 # 1. Drupal
 # -------------
-# Will be pulled by Git
+    && mkdir -p ${DRUPAL_SOURCE}\
 # ----------
 # ~. clean up
 # ----------
@@ -53,6 +55,8 @@ COPY nginx.conf /etc/nginx/nginx.conf
 RUN rm -rf /etc/nginx/conf.d/default.conf
 # php
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
+# drupal
+COPY drupal-database-install-tasks.php ${DRUPAL_SOURCE}
 # phpmyadmin
 COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
 COPY phpmyadmin-config.inc.php $PHPMYADMIN_SOURCE/phpmyadmin-config.inc.php
