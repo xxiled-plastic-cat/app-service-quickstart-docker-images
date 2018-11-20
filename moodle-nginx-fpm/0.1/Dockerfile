@@ -2,7 +2,7 @@
 # Dockerfile for moodle
 #
 FROM appsvcorg/nginx-fpm:php7.2.11
-MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
+LABEL maintainer ="Azure App Service Container Images <appsvc-images@microsoft.com>"
 # ========
 # ENV vars
 # ========
@@ -22,8 +22,8 @@ ENV MARIADB_LOG_DIR "/home/LogFiles/mysql"
 ENV PHPMYADMIN_SOURCE "/usr/src/phpmyadmin"
 ENV PHPMYADMIN_HOME "/home/phpmyadmin"
 # moodle
-ENV MOODLE_SOURCE "/usr/src/moodle"
 ENV MOODLE_HOME "/home/site/wwwroot"
+ENV MOODLE_SOURCE "/usr/src/moodle"
 #
 ENV DOCKER_BUILD_HOME "/dockerbuild"
 # ====================
@@ -69,12 +69,8 @@ RUN set -ex \
             libssh2                         \
             libssh2-dev                     \
             libxslt-dev                     \
-	# && apk add --no-cache --virtual .build-deps \
-    # 	autoconf build-base gcc libc-dev libtool make \
-    # 	libjpeg-turbo libjpeg-turbo-dev libpng-dev libxml2-dev icu-dev \
-    && docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
-    && docker-php-ext-install -j "$(nproc)" gd zip pdo_pgsql pdo_mysql opcache xmlrpc soap intl \
-    #mysqli
+	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
+    && docker-php-ext-install -j "$(nproc)" gd zip pdo_pgsql pdo_mysql opcache xmlrpc soap intl \    
     && pecl install apcu \
 	&& docker-php-ext-enable apcu \        
     && find /usr/local/lib/php/extensions -name '*.a' -delete \
@@ -89,19 +85,15 @@ RUN set -ex \
     )" \
     && apk add --virtual .phpext-rundeps $runDeps \
     && apk del .build-dependencies \
-    && docker-php-source delete
-RUN { \
-        echo 'opcache.memory_consumption=128'; \
-        echo 'opcache.interned_strings_buffer=8'; \
-        echo 'opcache.max_accelerated_files=4000'; \
-        echo 'opcache.revalidate_freq=60'; \
-        echo 'opcache.fast_shutdown=1'; \
-        echo 'opcache.enable_cli=1'; \
-    } > /usr/local/etc/php/conf.d/opcache-recommended.ini \
+    && docker-php-source delete \
+    # session_save_path
+    && mkdir -p /usr/local/php/tmp \
+    && chmod 777 /usr/local/php/tmp \
 	# ------------	
 	# 2. moodle
 	# ------------
-    # git pull 
+    # git pull
+    && mkdir -p $MOODLE_SOURCE \
     # cp in final	
 	# ----------
 	# ~. upgrade/clean up
@@ -121,8 +113,11 @@ COPY default.conf /etc/nginx/conf.d/default.conf
 # =====
 # final
 # =====
-COPY moodle-latest-35.tgz $MOODLE_SOURCE/
 COPY config.php $MOODLE_SOURCE/
+COPY installlib.php $MOODLE_SOURCE/
+# php
+COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
+COPY php.ini /usr/local/etc/php/conf.d/php.ini
 # mariadb
 RUN set -ex \
     && rm -rf /var/log/mysql \

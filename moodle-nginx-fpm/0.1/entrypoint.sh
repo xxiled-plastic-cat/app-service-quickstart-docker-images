@@ -49,7 +49,7 @@ setup_phpmyadmin(){
 setup_moodle(){
 	test ! -d "$MOODLE_HOME" && echo "INFO: $MOODLE_HOME not found. creating ..." && mkdir -p "$MOODLE_HOME"
 	cd $MOODLE_HOME
-    GIT_REPO=${GIT_REPO:-https://github.com/leonzhang77/moodle-linuxappservice-azure}
+    GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/moodle-linuxappservice-azure}
 	GIT_BRANCH=${GIT_BRANCH:-master}
 	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
 	echo "REPO: "$GIT_REPO
@@ -63,10 +63,13 @@ setup_moodle(){
 		git fetch origin
 	    git branch --track $GIT_BRANCH origin/$GIT_BRANCH && git checkout $GIT_BRANCH
 	fi
-    # tar -xf $MOODLE_SOURCE/moodle-latest-35.tgz -C $MOODLE_HOME
-    mkdir -p $MOODLE_HOME/moodledata
-    chown -R www-data:www-data $MOODLE_HOME
+    cp -rf $MOODLE_SOURCE/installlib.php $MOODLE_HOME/moodle/lib/installlib.php    
+    mkdir -p $MOODLE_HOME/moodledata    
     chmod -R 777 $MOODLE_HOME
+    if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
+        echo "INFO: NOT in Azure, chown for "$MOODLE_HOME  
+        chown -R www-data:www-data $MOODLE_HOME
+    fi 
 }
 
 update_db_config(){    
@@ -116,8 +119,9 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
 
     echo "Granting user for phpMyAdmin ..."
     # Set default value of username/password if they are't exist/null.
-    DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
-    DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
+    update_db_config
+    # DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
+    # DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
 	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
     echo "phpmyadmin username:" $DATABASE_USERNAME
     echo "phpmyadmin password:" $DATABASE_PASSWORD
@@ -127,29 +131,38 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     setup_phpmyadmin    
 fi
 
-# That wp-config.php doesn't exist means WordPress is not installed/configured yet.
+# That config.php doesn't exist means WordPress is not installed/configured yet.
 if [ ! -e "$MOODLE_HOME/moodle/config.php" ]; then
 	echo "INFO: $MOODLE_HOME/moodle/config.php not found."
 	echo "Installing Moodle for the first time ..." 
 	setup_moodle	
 
 	if [ ${DATABASE_HOST} ]; then
-        update_db_config
+        echo "INFO: Update config.php..."
         
-		# cd $MOODLE_SOURCE && chmod 777 config.php
-		# if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
-        #    echo "INFO: NOT in Azure, chown for wp-config.php"
-        #    chown -R www-data:www-data wp-config.php
-        # fi				
-        # sed -i "s/getenv('DATABASE_NAME')/'${DATABASE_NAME}'/g" wp-config.php
-        # sed -i "s/getenv('DATABASE_USERNAME')/'${DATABASE_USERNAME}'/g" wp-config.php
-        # sed -i "s/getenv('DATABASE_PASSWORD')/'${DATABASE_PASSWORD}'/g" wp-config.php
-        # sed -i "s/getenv('DATABASE_HOST')/'${DATABASE_HOST}'/g" wp-config.php
-		# cd $WORDPRESS_HOME
-		# cp $WORDPRESS_SOURCE/wp-config.php .
+        cd $MOODLE_HOME/moodle
+		cp $MOODLE_SOURCE/config.php .
+        chmod 777 config.php
+
+		if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
+           echo "INFO: NOT in Azure, chown for wp-config.php"
+           chown -R www-data:www-data config.php
+        fi
+        if [ "${DATABASE_TYPE}" == "local" ]; then
+            #$CFG->dbtype    = 'mariadb';
+            sed -i "s/getenv('DATABASE_TYPE')/'mariadb'/g" config.php
+        else
+            sed -i "s/getenv('DATABASE_TYPE')/'mysqli'/g" config.php
+        fi
+        sed -i "s/getenv('DATABASE_NAME')/'${DATABASE_NAME}'/g" config.php
+        sed -i "s/getenv('DATABASE_USERNAME')/'${DATABASE_USERNAME}'/g" config.php
+        sed -i "s/getenv('DATABASE_PASSWORD')/'${DATABASE_PASSWORD}'/g" config.php
+        sed -i "s/getenv('DATABASE_HOST')/'${DATABASE_HOST}'/g" config.php
+    else 
+        echo "INFO: DATABASE_HOST: ${DATABASE_HOST}"			        
 	fi
 else
-	echo "INFO: $WORDPRESS_HOME/wp-config.php already exists."
+	echo "INFO: $MOODLE_HOME/moodle/config.php already exists."
 	echo "INFO: You can modify it manually as need."
 fi	
 
@@ -179,6 +192,12 @@ fi
 echo "Starting SSH ..."
 rc-service sshd start
 
+test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
+if [ ! -e "$NGINX_LOG_DIR/php-error.log" ]; then    
+    touch $NGINX_LOG_DIR/php-error.log;    
+fi
+chmod 777 $NGINX_LOG_DIR/php-error.log;
+
 echo "Starting php-fpm ..."
 php-fpm -D
 if [ "${LISTEN_TYPE}" == "socket" ]; then  
@@ -186,9 +205,9 @@ if [ "${LISTEN_TYPE}" == "socket" ]; then
 fi
 
 echo "Starting Nginx ..."
-mkdir -p /home/LogFiles/nginx
-if test ! -e /home/LogFiles/nginx/error.log; then 
-    touch /home/LogFiles/nginx/error.log
+if test ! -e $NGINX_LOG_DIR/error.log; then 
+    touch $NGINX_LOG_DIR/nginx/error.log
 fi
+chmod 777 $NGINX_LOG_DIR/nginx/error.log
 /usr/sbin/nginx -g "daemon off;"
 
