@@ -109,6 +109,8 @@ composer require drupal/adminimal_theme
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 1800, suggest to set it as 900 when using this version.
 
 ## Change Log 
+- **Version 0.46**
+  1. Update php settings, php memory = 512M.
 - **Version 0.45**
   1. Update php codes, it can fill database parameters automatically if deploy to azure by template.    
 - **Version 0.44-composer-varnish**

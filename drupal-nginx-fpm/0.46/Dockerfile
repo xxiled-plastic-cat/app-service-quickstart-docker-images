@@ -1,5 +1,5 @@
 FROM appsvcorg/drupal-nginx-fpm:0.44
-MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
+LABEL maintainer ="Azure App Service Container Images <appsvc-images@microsoft.com>"
 # ========
 # ENV vars
 # ========
@@ -55,6 +55,7 @@ COPY nginx.conf /etc/nginx/nginx.conf
 RUN rm -rf /etc/nginx/conf.d/default.conf
 # php
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
+COPY php.ini /usr/local/etc/php/conf.d/php.ini
 # drupal
 COPY drupal-database-install-tasks.php ${DRUPAL_SOURCE}
 # phpmyadmin
