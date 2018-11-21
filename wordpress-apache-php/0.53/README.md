@@ -94,6 +94,9 @@ There is a tradeoff between file server stability and file persistence . Since w
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
 
 ## Change Log
+- **Version 0.53**
+  1. add php extension fileinfo.
+  
 - **Version 0.52**
   1. Upgrade alpine to 3.8.
   2. Upgrade php to 7.2.8.

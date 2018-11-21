@@ -28,6 +28,7 @@ RUN set -ex \
 	&& cd /usr/bin \
 	&& wget http://www.vdberg.org/~richard/tcpping \
 	&& chmod 777 tcpping \
+	&& apk add --update php7-fileinfo \
 	# --------
 	# 1. redis
 	# --------
