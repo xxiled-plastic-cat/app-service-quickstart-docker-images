@@ -215,18 +215,27 @@ cd $DRUPAL_HOME
 echo "Starting SSH ..."
 rc-service sshd start
 
+test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
+if [ ! -e "$NGINX_LOG_DIR/php-error.log" ]; then    
+    touch $NGINX_LOG_DIR/php-error.log;    
+fi
+chmod 777 $NGINX_LOG_DIR/php-error.log;
+test ! -d "/usr/local/php/tmp" && echo "INFO: Session folder for php not found. creating..." && mkdir -p "/usr/local/php/tmp"
+chmod 777 /usr/local/php/tmp
+
 echo "Starting php-fpm ..."
 php-fpm -D
 if [ "${LISTEN_TYPE}" == "socket" ]; then  
     chmod 777 /run/php/php7.0-fpm.sock
 fi
 
+test ! -d "$VARNISH_LOG_DIR" && echo "INFO: Log folder for varnish found. creating..." && mkdir -p "$VARNISH_LOG_DIR"
 echo "Starting Varnishd ..."
 /usr/sbin/varnishd -a :80 -f /etc/varnish/default.vcl
 
 echo "Starting Nginx ..."
-mkdir -p /home/LogFiles/nginx
-if test ! -e /home/LogFiles/nginx/error.log; then 
-    touch /home/LogFiles/nginx/error.log
+if test ! -e $NGINX_LOG_DIR/error.log; then 
+    touch $NGINX_LOG_DIR/error.log
 fi
+chmod 777 $NGINX_LOG_DIR/error.log;
 /usr/sbin/nginx -g "daemon off;"

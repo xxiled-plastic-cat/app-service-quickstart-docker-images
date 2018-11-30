@@ -18,6 +18,8 @@ ENV PHPMYADMIN_HOME "/home/phpmyadmin"
 ENV DRUPAL_SOURCE "/usr/src/drupal"
 #nginx
 ENV NGINX_LOG_DIR "/home/LogFiles/nginx"
+#varnish
+ENV VARNISH_LOG_DIR "/home/LogFiles/varnish"
 #php
 ENV PHP_HOME "/usr/local/etc/php"
 ENV PHP_CONF_DIR $PHP_HOME
@@ -35,6 +37,8 @@ WORKDIR $DOCKER_BUILD_HOME
 RUN set -ex \
     && apk update \
     && apk add --no-cache varnish\
+    && rm -rf /var/log/varnish \
+	&& ln -s $VARNISH_LOG_DIR /var/log/varnish \
 # -------------
 # 1. Drupal
 # -------------
