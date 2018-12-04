@@ -219,7 +219,7 @@ test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. cr
 if [ ! -e "$NGINX_LOG_DIR/php-error.log" ]; then    
     touch $NGINX_LOG_DIR/php-error.log;    
 fi
-chmod 777 $NGINX_LOG_DIR/php-error.log;
+chmod 666 $NGINX_LOG_DIR/php-error.log;
 test ! -d "/usr/local/php/tmp" && echo "INFO: Session folder for php not found. creating..." && mkdir -p "/usr/local/php/tmp"
 chmod 777 /usr/local/php/tmp
 
@@ -237,5 +237,5 @@ echo "Starting Nginx ..."
 if test ! -e $NGINX_LOG_DIR/error.log; then 
     touch $NGINX_LOG_DIR/error.log
 fi
-chmod 777 $NGINX_LOG_DIR/error.log;
+chmod 666 $NGINX_LOG_DIR/error.log;
 /usr/sbin/nginx -g "daemon off;"
