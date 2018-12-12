@@ -9,9 +9,9 @@ This repository contains docker images that are used for App Service Linux. Some
 This docker image currently contains the following components:
 
 1. Nginx (1.14.0)   
-2. PHP (7.2.12) 
+2. PHP (7.2.13) 
 3. MariaDB ( 10.1.26/if using Local Database )
-4. Phpmyadmin ( 4.8.3/if using Local Database )
+4. Phpmyadmin ( 4.8.4/if using Local Database )
 
 # How to Deploy to Azure 
 1. Create a Web App for Containers 
@@ -46,7 +46,7 @@ ps aux
 # Kill master process of php-fpm
 kill -INT <gid>
 # start php-fpm again
-php-fpm -D
+php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
 ```
 5. Xdebug is turned on.
 
@@ -63,6 +63,11 @@ php-fpm -D
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version php7.2.13** 
+  1. Upgrade version of php to 7.2.13.
+  2. Upgrade phpmyadmin to 4.8.4.
+  3. Keep watching php-fpm by supervisor.
+  4. Log rotate isn't working well with AZURE, disable it if deploy to azure.
 - **Version php7.2.12** 
   1. Upgrade version of alpine to 3.8.
   2. Upgrade version of php to 7.2.12.

@@ -1,4 +1,4 @@
-FROM php:7.2.12-fpm-alpine3.8
+FROM php:7.2.13-fpm-alpine3.8
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
@@ -358,8 +358,9 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 # log rotate & supervisor
 # -------------
 	&& apk update \
-	&& apk add logrotate supervisor \
-	&& rm -f /etc/supervisord.conf \
+	&& apk add logrotate supervisor \	
+	# check log files once every minute, triaged by crond.
+	&& echo "*       *       *       *       *       sh /usr/local/bin/triage-rotate.sh" >> /etc/crontabs/root \
 # -------------
 # phpmyadmin
 # -------------
@@ -387,32 +388,27 @@ RUN set -ex\
 COPY sshd_config /etc/ssh/ 
 # php
 COPY php.ini /usr/local/etc/php/php.ini
-COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
-COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
-COPY www.conf /usr/local/etc/php/conf.d/www.conf
+COPY php_conf/. /usr/local/etc/php/conf.d/
 COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 # nginx
-COPY spec-settings.conf /etc/nginx/conf.d/spec-settings.conf
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY default.conf /etc/nginx/conf.d/default.conf
+COPY nginx_conf/. /etc/nginx/conf.d/
 # mariadb
 COPY mariadb.cnf /etc/mysql/my.cnf
 # phpmyadmin
-COPY phpMyAdmin.tar.gz $PHPMYADMIN_SOURCE/phpMyAdmin.tar.gz
-COPY phpmyadmin-config.inc.php $PHPMYADMIN_SOURCE/
-COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
+COPY phpmyadmin_src/. $PHPMYADMIN_SOURCE/
 # log rotater
 COPY logrotate.conf /etc/logrotate.conf
-COPY nginx /etc/logrotate.d/nginx
+RUN chmod 444 /etc/logrotate.conf
+COPY logrotate.d/. /etc/logrotate.d/
+RUN chmod -R 444 /etc/logrotate.d
 # supervisor
 COPY supervisord.conf /etc/
-COPY super_nginx.sh /usr/local/bin
-RUN chmod +x /usr/local/bin/super_nginx.sh
 #
 # =====
 # final
 # =====
-COPY init_container.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/init_container.sh
+COPY local_bin/. /usr/local/bin/
+RUN chmod -R +x /usr/local/bin
 EXPOSE 2222 80
 ENTRYPOINT ["init_container.sh"]
