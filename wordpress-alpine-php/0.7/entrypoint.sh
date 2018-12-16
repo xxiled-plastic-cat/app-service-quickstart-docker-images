@@ -1,6 +1,8 @@
 #!/bin/bash
 
-#set -e
+# set -e
+
+php -v
 setup_mariadb_data_dir(){
     test ! -d "$MARIADB_DATA_DIR" && echo "INFO: $MARIADB_DATA_DIR not found. creating ..." && mkdir -p "$MARIADB_DATA_DIR"
 
@@ -21,16 +23,31 @@ setup_mariadb_data_dir(){
 }
 
 start_mariadb(){
-    /etc/init.d/mariadb setup
-    rc-service mariadb start 
+    if test ! -e /run/mysqld/mysqld.sock; then 
+        touch /run/mysqld/mysqld.sock
+    fi
+    chmod 777 /run/mysqld/mysqld.sock
+    mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+    /usr/bin/mysqld --user=mysql &
+    # make sure mysql service is started...
+    port=`netstat -nlt|grep 3306|wc -l`
+    process=`ps -ef |grep mysql|grep -v grep |wc -l`
+    try_count=1
 
-    rm -f /tmp/mysql.sock
-    ln -s /var/run/mysqld/mysqld.sock /tmp/mysql.sock
-
-    # create default database 'azurelocaldb'
-    mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"
+    while [ $try_count -le 10 ]
+    do 
+        if [ $port -eq 1 ] && [ $process -eq 1 ]; then 
+            echo "INFO: MariaDB is running... "            
+            break
+        else            
+            echo "INFO: Haven't found MariaDB Service this time, Wait 10s, try again..."
+            sleep 10s
+            let try_count+=1
+            port=`netstat -nlt|grep 3306|wc -l`
+            process=`ps -ef |grep mysql|grep -v grep |wc -l`    
+        fi
+    done    
 }
-
 #unzip phpmyadmin
 setup_phpmyadmin(){
     test ! -d "$PHPMYADMIN_HOME" && echo "INFO: $PHPMYADMIN_HOME not found. creating..." && mkdir -p "$PHPMYADMIN_HOME"
@@ -75,7 +92,7 @@ setup_wordpress(){
 }
 
 update_wordpress_config(){    
-	DATABASE_HOST=${DATABASE_HOST:-localhost}
+	DATABASE_HOST=${DATABASE_HOST:-127.0.0.1}
 	DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}
 	# if DATABASE_USERNAME equal phpmyadmin, it means it's nothing at beginning.
 	if [ "${DATABASE_USERNAME}" == "phpmyadmin" ]; then
@@ -104,8 +121,8 @@ fi
 chmod 777 /run/php/php7.0-fpm.sock
 
 DATABASE_TYPE=$(echo ${DATABASE_TYPE}|tr '[A-Z]' '[a-z]')
-
-if [ "${DATABASE_TYPE}" == "local" ]; then  
+if [ "${DATABASE_TYPE}" == "local" ]; then
+    echo "Starting MariaDB and PHPMYADMIN..."  
     echo 'mysql.default_socket = /run/mysqld/mysqld.sock' >> $PHP_CONF_FILE     
     echo 'mysqli.default_socket = /run/mysqld/mysqld.sock' >> $PHP_CONF_FILE     
     #setup MariaDB
@@ -117,7 +134,8 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     chown -R mysql:mysql $MARIADB_LOG_DIR
     echo "Starting local MariaDB ..."
     start_mariadb
-
+    echo "Installing phpMyAdmin ..."
+    setup_phpmyadmin
     echo "Granting user for phpMyAdmin ..."
     # Set default value of username/password if they are't exist/null.
     DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
@@ -127,11 +145,10 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     echo "phpmyadmin password:" $DATABASE_PASSWORD
     echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
     mysql -u root -e "GRANT ALL ON *.* TO \`$DATABASE_USERNAME\`@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD' WITH GRANT OPTION; FLUSH PRIVILEGES;"
-    echo "Installing phpMyAdmin ..."
-    setup_phpmyadmin
-    echo "Loading phpMyAdmin conf ..."
-	load_phpmyadmin    
+    # create default database 'azurelocaldb'
+    mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"    
 fi
+
 
 # That wp-config.php doesn't exist means WordPress is not installed/configured yet.
 if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
@@ -169,23 +186,24 @@ if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
 else
 	echo "INFO: $WORDPRESS_HOME/wp-config.php already exists."
 	echo "INFO: You can modify it manually as need."
-fi	
-
+fi
 
 echo "Starting Redis ..."
 redis-server &
 
+if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
+    echo "NOT in AZURE, Start crond, log rotate..."
+    crond
+fi 
+
+test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
+test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
+test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
+
 echo "Starting SSH ..."
-rc-service sshd start
-
 echo "Starting php-fpm ..."
-php-fpm -D
-chmod 777 /run/php/php7.0-fpm.sock
-
 echo "Starting Nginx ..."
-mkdir -p /home/LogFiles/nginx
-if test ! -e /home/LogFiles/nginx/error.log; then 
-    touch /home/LogFiles/nginx/error.log
-fi
-/usr/sbin/nginx -g "daemon off;"
+
+cd /usr/bin/
+supervisord -c /etc/supervisord.conf
 

@@ -18,27 +18,18 @@
  * @package WordPress
  */
 
-//Using environment variables for DB connection information
-
 // ** MySQL settings - You can get this info from your web host ** //
 /** The name of the database for WordPress */
-
-$connectstr_dbhost = getenv('DATABASE_HOST');
-$connectstr_dbname = getenv('DATABASE_NAME');
-$connectstr_dbusername = getenv('DATABASE_USERNAME');
-$connectstr_dbpassword = getenv('DATABASE_PASSWORD');
-
-
-define('DB_NAME', $connectstr_dbname);
+define('DB_NAME', 'database_name_here');
 
 /** MySQL database username */
-define('DB_USER', $connectstr_dbusername);
+define('DB_USER', 'username_here');
 
 /** MySQL database password */
-define('DB_PASSWORD',$connectstr_dbpassword);
+define('DB_PASSWORD', 'password_here');
 
 /** MySQL hostname */
-define('DB_HOST', $connectstr_dbhost);
+define('DB_HOST', 'localhost');
 
 /** Database Charset to use in creating database tables. */
 define('DB_CHARSET', 'utf8');
@@ -90,19 +81,9 @@ define('WP_DEBUG', false);
 
 /* That's all, stop editing! Happy blogging. */
 
-//Relative URLs for swapping across app service deployment slots 
-define('WP_HOME', 'http://'. filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_SANITIZE_STRING));
-define('WP_SITEURL', 'http://'. filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_SANITIZE_STRING));
-define('WP_CONTENT_URL', '/wp-content');
-define('DOMAIN_CURRENT_SITE', filter_input(INPUT_SERVER, 'HTTP_HOST', FILTER_SANITIZE_STRING));
-
 /** Absolute path to the WordPress directory. */
 if ( !defined('ABSPATH') )
 	define('ABSPATH', dirname(__FILE__) . '/');
-	
-/**https://codex.wordpress.org/Function_Reference/is_ssl */
-if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')
-	$_SERVER['HTTPS'] = 'on';
-	
+
 /** Sets up WordPress vars and included files. */
 require_once(ABSPATH . 'wp-settings.php');

@@ -1,7 +1,7 @@
 #
 # Dockerfile for WordPress
 #
-FROM appsvcorg/nginx-fpm:0.4
+FROM appsvcorg/nginx-fpm:php7.2.13
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
@@ -53,41 +53,24 @@ RUN set -ex \
     && curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz \
     && tar xfz /tmp/redis.tar.gz \
     && rm -r /tmp/redis.tar.gz \
-    && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis	
-RUN set -ex; \
-    \
-	apk add --no-cache --virtual .build-deps \
+    && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis	\
+	&& apk add --no-cache --virtual .build-deps \
 		libjpeg-turbo-dev \
-		libpng-dev \
-	; \
-	\
-	docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr; \
-	docker-php-ext-install gd opcache zip redis; \
-	\
-	runDeps="$( \
+		libpng-dev \	
+	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
+	&& docker-php-ext-install gd zip redis \
+	&& runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
 			| tr ',' '\n' \
 			| sort -u \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)"; \
-	apk add --virtual .wordpress-phpexts-rundeps $runDeps; \
-	apk del .build-deps; \
-	docker-php-source delete;
-
-# set recommended PHP.ini settings
-# see https://secure.php.net/manual/en/opcache.installation.php
-RUN { \
-		echo 'opcache.memory_consumption=128'; \
-		echo 'opcache.interned_strings_buffer=8'; \
-		echo 'opcache.max_accelerated_files=4000'; \
-		echo 'opcache.revalidate_freq=2'; \
-		echo 'opcache.fast_shutdown=1'; \
-		echo 'opcache.enable_cli=1'; \
-	} > /usr/local/etc/php/conf.d/opcache-recommended.ini	
+	)" \
+	&& apk add --virtual .wordpress-phpexts-rundeps $runDeps \
+	&& apk del .build-deps \
+	&& docker-php-source delete \
 	# ------------	
 	# 2. wordpress
 	# ------------
-RUN set -ex \
 	&& mkdir -p $WORDPRESS_SOURCE \
     # cp in final	
 	# ----------
