@@ -69,23 +69,23 @@ kill -INT <gid>
 # start php-fpm again
 php-fpm -D && chmod 777 /var/run/php/php7.0-fpm.sock
 ```
-5. Xdebug is turned on.
+6. Xdebug is turned on.
 
 ## How to update config files of nginx
 1. Go to "/etc/nginx", update config files as your wish. 
-5. Reload by below cmd: 
+2. Reload by below cmd: 
 ```
 /usr/sbin/nginx -s reload
 ```
 
 ## Tips of Log rotate
-1. BY default, Log rotate is disabled if deploy this images to web app of azure. It's enabled if you use this image by "docker run".
+1. By default, log rotate is disabled if deploy this images to web app for containers of azure. It's enabled if you use this image by "docker run".
 2. Log rotate is managed by crond, you can start it with below cmd, it will check logs files in the /home/LogFiles/nginx every minute, and rotate them if bigger than 1M. Old files are stored in /home/LogFiles/olddir, keep 20 backup files by default setting.
 ```
 crond
 ```
-3. Please keep an eye on the log files, the performance will going down if it's too big.
-4. If you don't like to start crond service to triage log rotate every minute, you also can manually triage it by below cmd as your wish, it will talk a while if these log files has already been too big.
+3. Please keep an eye on the log files, the performance will be going down if it's too big.
+4. If you don't like to start crond service to triage log rotate every minute, you also can manually triage it by below cmd as your wish, it will talk a while if these log files have already been too big.
 ```
 logrotate /etc/logrotate.conf
 ```
