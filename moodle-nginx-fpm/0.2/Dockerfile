@@ -1,7 +1,7 @@
 #
 # Dockerfile for moodle
 #
-FROM appsvcorg/nginx-fpm:php7.2.11
+FROM appsvcorg/nginx-fpm:php7.2.13
 LABEL maintainer ="Azure App Service Container Images <appsvc-images@microsoft.com>"
 # ========
 # ENV vars
@@ -24,6 +24,8 @@ ENV PHPMYADMIN_HOME "/home/phpmyadmin"
 # moodle
 ENV MOODLE_HOME "/home/site/wwwroot"
 ENV MOODLE_SOURCE "/usr/src/moodle"
+# redis
+ENV PHPREDIS_VERSION 3.1.2
 #
 ENV DOCKER_BUILD_HOME "/dockerbuild"
 # ====================
@@ -37,12 +39,18 @@ RUN set -ex \
     # --------
 	# ~. tools
 	# --------
-    && apk update \	
+    && apk update \
+    && apk add --no-cache redis memcached \
+    # && apk add --no-cache mongodb mongodb-tools \	
 	# --------
 	# 1. PHP extensions
 	# -------- 
     && docker-php-source extract \
-    && apk add --no-cache                  \
+    && curl -L -o /tmp/redis.tar.gz https://github.com/phpredis/phpredis/archive/$PHPREDIS_VERSION.tar.gz \
+    && tar xfz /tmp/redis.tar.gz \
+    && rm -r /tmp/redis.tar.gz \
+    && mv phpredis-$PHPREDIS_VERSION /usr/src/php/ext/redis	\
+    && apk add --no-cache                   \
             --virtual .build-dependencies   \
                 $PHPIZE_DEPS                \
                 zlib-dev                    \
@@ -53,26 +61,43 @@ RUN set -ex \
                 libtool                     \
                 make                        \
                 pcre-dev                    \    
-            tini                            \
-            libintl                         \
-            icu                             \
-            icu-dev                         \
-            libxml2-dev                     \
-            postgresql-dev                  \
-            freetype-dev                    \
-            libjpeg-turbo-dev               \
-            libpng-dev                      \
-            gmp                             \
-            gmp-dev                         \
-            libmemcached-dev                \
-            imagemagick-dev                 \
-            libssh2                         \
-            libssh2-dev                     \
-            libxslt-dev                     \
+                tini                        \
+                libintl                     \
+                icu                         \
+                icu-dev                     \
+                libxml2-dev                 \
+                postgresql-dev              \
+                freetype-dev                \
+                libjpeg-turbo-dev           \
+                libpng-dev                  \
+                gmp                         \
+                gmp-dev                     \
+                libmemcached-dev            \
+                imagemagick-dev             \
+                libssh2                     \
+                libssh2-dev                 \
+                libxslt-dev                 \
+                libmemcached-libs           \
+                zlib                        \
+    # Install igbinary (memcached's deps)
+    && pecl install igbinary \
+    # Install memcached
+    && ( \
+        pecl install --nobuild memcached && \
+        cd "$(pecl config-get temp_dir)/memcached" && \
+        phpize && \
+        ./configure --enable-memcached-igbinary && \
+        make -j$(nproc) && \
+        make install && \
+        cd /tmp/ \
+    ) \
+    # Install mongodb
+    # && pecl install mongodb \
+    # Enable PHP extensions
+    && docker-php-ext-enable igbinary memcached \
+    # && docker-php-ext-enable igbinary memcached mongodb \    
 	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
-    && docker-php-ext-install -j "$(nproc)" gd zip pdo_pgsql pdo_mysql opcache xmlrpc soap intl \    
-    && pecl install apcu \
-	&& docker-php-ext-enable apcu \        
+    && docker-php-ext-install -j "$(nproc)" gd zip redis xmlrpc soap intl \    
     && find /usr/local/lib/php/extensions -name '*.a' -delete \
     && find /usr/local/lib/php/extensions -name '*.so' -exec strip --strip-all '{}' \; \
     && runDeps="$( \
@@ -106,25 +131,19 @@ RUN set -ex \
 # Configure
 # =========
 # nginx
-RUN mkdir -p /etc/nginx/conf.d
-COPY spec-settings.conf /etc/nginx/conf.d/spec-settings.conf
+COPY nginx_conf/. /etc/nginx/conf.d/
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY default.conf /etc/nginx/conf.d/default.conf
 # =====
 # final
 # =====
-COPY config.php $MOODLE_SOURCE/
-COPY installlib.php $MOODLE_SOURCE/
+COPY moodle_src/. $MOODLE_SOURCE/
 # php
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
-COPY php.ini /usr/local/etc/php/conf.d/php.ini
+COPY php.ini /usr/local/etc/php/php.ini
 # mariadb
-RUN set -ex \
-    && rm -rf /var/log/mysql \
-	&& ln -s $MARIADB_LOG_DIR /var/log/mysql 
 COPY my.cnf /etc/mysql/my.cnf
 # phpmyadmin
-COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/phpmyadmin-default.conf
+COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/
 #
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh

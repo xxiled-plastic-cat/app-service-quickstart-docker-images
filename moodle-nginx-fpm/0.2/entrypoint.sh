@@ -21,12 +21,30 @@ setup_mariadb_data_dir(){
 }
 
 start_mariadb(){
-    /etc/init.d/mariadb setup
-    rc-service mariadb start 
+    if test ! -e /run/mysqld/mysqld.sock; then 
+        touch /run/mysqld/mysqld.sock
+    fi
+    chmod 777 /run/mysqld/mysqld.sock
+    mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
+    /usr/bin/mysqld --user=mysql &
+    # make sure mysql service is started...
+    port=`netstat -nlt|grep 3306|wc -l`
+    process=`ps -ef |grep mysql|grep -v grep |wc -l`
+    try_count=1
 
-    rm -f /tmp/mysql.sock
-    ln -s /var/run/mysqld/mysqld.sock /tmp/mysql.sock
-
+    while [ $try_count -le 10 ]
+    do 
+        if [ $port -eq 1 ] && [ $process -eq 1 ]; then 
+            echo "INFO: MariaDB is running... "            
+            break
+        else            
+            echo "INFO: Haven't found MariaDB Service this time, Wait 10s, try again..."
+            sleep 10s
+            let try_count+=1
+            port=`netstat -nlt|grep 3306|wc -l`
+            process=`ps -ef |grep mysql|grep -v grep |wc -l`    
+        fi
+    done
     # create default database 'azurelocaldb'
     mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"
 }
@@ -73,7 +91,7 @@ setup_moodle(){
 }
 
 update_db_config(){    
-	DATABASE_HOST=${DATABASE_HOST:-localhost}
+	DATABASE_HOST=${DATABASE_HOST:-127.0.0.1}
 	DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}
     DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
     DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
@@ -85,10 +103,6 @@ update_db_config(){
 
 # setup server root
 test ! -d "$MOODLE_HOME" && echo "INFO: $MOODLE_HOME not found. creating..." && mkdir -p "$MOODLE_HOME"
-# if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
-#     echo "INFO: NOT in Azure, chown for "$WORDPRESS_HOME 
-#     chown -R www-data:www-data $WORDPRESS_HOME
-# fi
 
 echo "Setup openrc ..." && openrc && touch /run/openrc/softlevel
 
@@ -104,7 +118,8 @@ chmod 777 /run/php/php7.0-fpm.sock
 
 DATABASE_TYPE=$(echo ${DATABASE_TYPE}|tr '[A-Z]' '[a-z]')
 
-if [ "${DATABASE_TYPE}" == "local" ]; then  
+if [ "${DATABASE_TYPE}" == "local" ]; then
+    echo "Starting MariaDB and PHPMYADMIN..."    
     echo 'mysql.default_socket = /run/mysqld/mysqld.sock' >> $PHP_CONF_FILE     
     echo 'mysqli.default_socket = /run/mysqld/mysqld.sock' >> $PHP_CONF_FILE     
     #setup MariaDB
@@ -131,7 +146,7 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     setup_phpmyadmin    
 fi
 
-# That config.php doesn't exist means WordPress is not installed/configured yet.
+# That config.php doesn't exist means moodle is not installed/configured yet.
 if [ ! -e "$MOODLE_HOME/moodle/config.php" ]; then
 	echo "INFO: $MOODLE_HOME/moodle/config.php not found."
 	echo "Installing Moodle for the first time ..." 
@@ -189,25 +204,27 @@ else
     sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/9000/g" /usr/local/etc/php-fpm.d/zz-docker.conf 
 fi
 
-echo "Starting SSH ..."
-rc-service sshd start
+echo "Starting Redis ..."
+redis-server &
 
+echo "Starting Memcached ..."
+/usr/bin/memcached -u memcached -v -m 128 -p 11211 -c 1024 -I 4M &
+
+if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
+    echo "NOT in AZURE, Start crond, log rotate..."
+    crond
+fi 
+
+test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
-if [ ! -e "$NGINX_LOG_DIR/php-error.log" ]; then    
-    touch $NGINX_LOG_DIR/php-error.log;    
-fi
-chmod 777 $NGINX_LOG_DIR/php-error.log;
+test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
+test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
+test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
 
+echo "Starting SSH ..."
 echo "Starting php-fpm ..."
-php-fpm -D
-if [ "${LISTEN_TYPE}" == "socket" ]; then  
-    chmod 777 /run/php/php7.0-fpm.sock
-fi
-
 echo "Starting Nginx ..."
-if test ! -e $NGINX_LOG_DIR/error.log; then 
-    touch $NGINX_LOG_DIR/nginx/error.log
-fi
-chmod 777 $NGINX_LOG_DIR/nginx/error.log
-/usr/sbin/nginx -g "daemon off;"
+
+cd /usr/bin/
+supervisord -c /etc/supervisord.conf
 
