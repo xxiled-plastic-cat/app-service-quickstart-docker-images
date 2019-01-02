@@ -40,8 +40,7 @@ RUN set -ex \
 	# ~. tools
 	# --------
     && apk update \
-    && apk add --no-cache redis memcached \
-    # && apk add --no-cache mongodb mongodb-tools \	
+    && apk add --no-cache redis \    
 	# --------
 	# 1. PHP extensions
 	# -------- 
@@ -79,24 +78,7 @@ RUN set -ex \
                 libxslt-dev                 \
                 libmemcached-libs           \
                 zlib                        \
-    # Install igbinary (memcached's deps)
-    && pecl install igbinary \
-    # Install memcached
-    && ( \
-        pecl install --nobuild memcached && \
-        cd "$(pecl config-get temp_dir)/memcached" && \
-        phpize && \
-        ./configure --enable-memcached-igbinary && \
-        make -j$(nproc) && \
-        make install && \
-        cd /tmp/ \
-    ) \
-    # Install mongodb
-    # && pecl install mongodb \
-    # Enable PHP extensions
-    && docker-php-ext-enable igbinary memcached \
-    # && docker-php-ext-enable igbinary memcached mongodb \    
-	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
+    && docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
     && docker-php-ext-install -j "$(nproc)" gd zip redis xmlrpc soap intl \    
     && find /usr/local/lib/php/extensions -name '*.a' -delete \
     && find /usr/local/lib/php/extensions -name '*.so' -exec strip --strip-all '{}' \; \

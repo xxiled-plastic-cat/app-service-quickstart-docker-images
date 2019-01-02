@@ -34,60 +34,51 @@ $CFG = new stdClass();
 //=========================================================================
 // 1. DATABASE SETUP
 //=========================================================================
-//GET database configuration from azure
-$connectstr_dbtype = ''; 
-$connectstr_dbhost = '';
-$connectstr_dbname = '';
-$connectstr_dbusername = '';
-$connectstr_dbpassword = '';
+// First, you need to configure the database where all Moodle data       //
+// will be stored.  This database must already have been created         //
+// and a username/password created to access it.                         //
 
-    $connectstr_dbtype = getenv('DATABASE_TYPE');
-    $connectstr_dbhost = getenv('DATABASE_HOST');
-    $connectstr_dbname = getenv('DATABASE_NAME');
-    $connectstr_dbusername = getenv('DATABASE_USERNAME');
-    $connectstr_dbpassword = getenv('DATABASE_PASSWORD');
-
-$CFG->dbtype    = $connectstr_dbtype;
-$CFG->dblibrary = 'native';
-$CFG->dbhost    = $connectstr_dbhost;
-$CFG->dbname    = $connectstr_dbname;
-$CFG->dbuser    = $connectstr_dbusername;
-$CFG->dbpass    = $connectstr_dbpassword;
-$CFG->prefix    = 'mdl_';
+$CFG->dbtype    = 'pgsql';      // 'pgsql', 'mariadb', 'mysqli', 'sqlsrv' or 'oci'
+$CFG->dblibrary = 'native';     // 'native' only at the moment
+$CFG->dbhost    = 'localhost';  // eg 'localhost' or 'db.isp.com' or IP
+$CFG->dbname    = 'moodle';     // database name, eg moodle
+$CFG->dbuser    = 'username';   // your database username
+$CFG->dbpass    = 'password';   // your database password
+$CFG->prefix    = 'mdl_';       // prefix to use for all table names
 $CFG->dboptions = array(
-  'dbpersist' => false,       // should persistent database connections be
-                              //  used? set to 'false' for the most stable
-                              //  setting, 'true' can improve performance
-                              //  sometimes
-  'dbsocket'  => false,       // should connection via UNIX socket be used?
-                              //  if you set it to 'true' or custom path
-                              //  here set dbhost to 'localhost',
-                              //  (please note mysql is always using socket
-                              //  if dbhost is 'localhost' - if you need
-                              //  local port connection use '127.0.0.1')
-  'dbport'    => '',          // the TCP port number to use when connecting
-                              //  to the server. keep empty string for the
-                              //  default port
-  'dbhandlesoptions' => false,// On PostgreSQL poolers like pgbouncer don't
-                              // support advanced options on connection.
-                              // If you set those in the database then
-                              // the advanced settings will not be sent.
-  'dbcollation' => 'utf8mb4_unicode_ci', // MySQL has partial and full UTF-8
-                              // support. If you wish to use partial UTF-8
-                              // (three bytes) then set this option to
-                              // 'utf8_unicode_ci', otherwise this option
-                              // can be removed for MySQL (by default it will
-                              // use 'utf8mb4_unicode_ci'. This option should
-                              // be removed for all other databases.
-  // 'fetchbuffersize' => 100000, // On PostgreSQL, this option sets a limit
-                              // on the number of rows that are fetched into
-                              // memory when doing a large recordset query
-                              // (e.g. search indexing). Default is 100000.
-                              // Uncomment and set to a value to change it,
-                              // or zero to turn off the limit. You need to
-                              // set to zero if you are using pg_bouncer in
-                              // 'transaction' mode (it is fine in 'session'
-                              // mode).
+    'dbpersist' => false,       // should persistent database connections be
+                                //  used? set to 'false' for the most stable
+                                //  setting, 'true' can improve performance
+                                //  sometimes
+    'dbsocket'  => false,       // should connection via UNIX socket be used?
+                                //  if you set it to 'true' or custom path
+                                //  here set dbhost to 'localhost',
+                                //  (please note mysql is always using socket
+                                //  if dbhost is 'localhost' - if you need
+                                //  local port connection use '127.0.0.1')
+    'dbport'    => '',          // the TCP port number to use when connecting
+                                //  to the server. keep empty string for the
+                                //  default port
+    'dbhandlesoptions' => false,// On PostgreSQL poolers like pgbouncer don't
+                                // support advanced options on connection.
+                                // If you set those in the database then
+                                // the advanced settings will not be sent.
+    'dbcollation' => 'utf8mb4_unicode_ci', // MySQL has partial and full UTF-8
+                                // support. If you wish to use partial UTF-8
+                                // (three bytes) then set this option to
+                                // 'utf8_unicode_ci', otherwise this option
+                                // can be removed for MySQL (by default it will
+                                // use 'utf8mb4_unicode_ci'. This option should
+                                // be removed for all other databases.
+    // 'fetchbuffersize' => 100000, // On PostgreSQL, this option sets a limit
+                                // on the number of rows that are fetched into
+                                // memory when doing a large recordset query
+                                // (e.g. search indexing). Default is 100000.
+                                // Uncomment and set to a value to change it,
+                                // or zero to turn off the limit. You need to
+                                // set to zero if you are using pg_bouncer in
+                                // 'transaction' mode (it is fine in 'session'
+                                // mode).
 );
 
 
@@ -102,7 +93,9 @@ $CFG->dboptions = array(
 // If you need both intranet and Internet access please read
 // http://docs.moodle.org/en/masquerading
 
-$CFG->wwwroot   = "http://".$_SERVER['HTTP_HOST'];
+$CFG->wwwroot   = 'http://example.com/moodle';
+
+
 //=========================================================================
 // 3. DATA FILES LOCATION
 //=========================================================================
@@ -116,7 +109,7 @@ $CFG->wwwroot   = "http://".$_SERVER['HTTP_HOST'];
 //
 // - On Windows systems you might specify something like 'c:\moodledata'
 
-$CFG->dataroot  = '/home/site/wwwroot/moodledata';
+$CFG->dataroot  = '/home/example/moodledata';
 
 
 //=========================================================================
@@ -268,7 +261,6 @@ $CFG->admin = 'admin';
 //   File session handler (file system locking required):
 //      $CFG->session_handler_class = '\core\session\file';
 //      $CFG->session_file_save_path = $CFG->dataroot.'/sessions';
-        $CFG->session_file_save_path = '/usr/local/php/tmp';
 //
 //   Memcached session handler (requires memcached server and extension):
 //      $CFG->session_handler_class = '\core\session\memcached';
@@ -281,7 +273,7 @@ $CFG->admin = 'admin';
 //
 //   Redis session handler (requires redis server and redis extension):
 //      $CFG->session_handler_class = '\core\session\redis';
-//     $CFG->session_redis_host = '127.0.0.1';
+//      $CFG->session_redis_host = '127.0.0.1';
 //      $CFG->session_redis_port = 6379;  // Optional.
 //      $CFG->session_redis_database = 0;  // Optional, default is db 0.
 //      $CFG->session_redis_auth = ''; // Optional, default is don't set one.
@@ -873,7 +865,7 @@ $CFG->admin = 'admin';
 // uses of the tool and undesired accesses as well, is compulsory to set a password for the users
 // generated by this tool, but only in case you want to generate a JMeter test. The value should be a string.
 // Example:
-   $CFG->tool_generator_users_password = 'testpassword';
+//   $CFG->tool_generator_users_password = 'examplepassword';
 //
 //=========================================================================
 // 13. SYSTEM PATHS (You need to set following, depending on your system)

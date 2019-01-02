@@ -111,6 +111,10 @@ There is a tradeoff between file server stability and file persistence . Since w
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
 
 ## Change Log
+- **Version 0.21**
+  1. Update config.php, disable debuging by default.
+  2. remove memcached, it's not working.
+  
 - **Version 0.2**
   1. Upgrade php-fpm
   2. Upgrade phpmyadmin.
