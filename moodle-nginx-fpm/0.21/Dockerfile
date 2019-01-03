@@ -26,6 +26,9 @@ ENV MOODLE_HOME "/home/site/wwwroot"
 ENV MOODLE_SOURCE "/usr/src/moodle"
 # redis
 ENV PHPREDIS_VERSION 3.1.2
+# memcached
+ENV MEMCACHED_VERSION 1.5.12
+ENV MEMCACHED_SHA1 f67096ba64b0c47668bcad5b680010c4f8987d4c
 #
 ENV DOCKER_BUILD_HOME "/dockerbuild"
 # ====================
@@ -78,7 +81,24 @@ RUN set -ex \
                 libxslt-dev                 \
                 libmemcached-libs           \
                 zlib                        \
-    && docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
+    # Install igbinary (memcached's deps)
+    && pecl install igbinary \
+    # Install memcached
+    && ( \
+        pecl install --nobuild memcached && \
+        cd "$(pecl config-get temp_dir)/memcached" && \
+        phpize && \
+        ./configure --enable-memcached-igbinary && \
+        make -j$(nproc) && \
+        make install && \
+        cd /tmp/ \
+    ) \
+    && docker-php-ext-enable igbinary memcached \
+    # # Install mongodb
+    # && pecl install mongodb \
+    # # Enable PHP extensions
+    # && docker-php-ext-enable mongodb \    
+	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
     && docker-php-ext-install -j "$(nproc)" gd zip redis xmlrpc soap intl \    
     && find /usr/local/lib/php/extensions -name '*.a' -delete \
     && find /usr/local/lib/php/extensions -name '*.so' -exec strip --strip-all '{}' \; \
@@ -96,8 +116,67 @@ RUN set -ex \
     # session_save_path
     && mkdir -p /usr/local/php/tmp \
     && chmod 777 /usr/local/php/tmp \
+    # ------------	
+	# ~. memcached 
+	# ------------
+    && addgroup -g 11211 memcache && adduser -D -u 11211 -G memcache memcache \
+	&& apk add --no-cache --virtual .build-deps \
+		ca-certificates \
+		coreutils \
+		cyrus-sasl-dev \
+		dpkg-dev dpkg \
+		gcc \
+		libc-dev \
+		libevent-dev \
+		libressl \
+		linux-headers \
+		make \
+		perl \
+		perl-utils \
+		tar \
+		wget \
+	\
+	&& wget -O memcached.tar.gz "https://memcached.org/files/memcached-$MEMCACHED_VERSION.tar.gz" \
+	&& echo "$MEMCACHED_SHA1  memcached.tar.gz" | sha1sum -c - \
+	&& mkdir -p /usr/src/memcached \
+	&& tar -xzf memcached.tar.gz -C /usr/src/memcached --strip-components=1 \
+	&& rm memcached.tar.gz \
+	\
+	&& cd /usr/src/memcached \
+	\
+	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+	&& enableExtstore="$( \
+# https://github.com/docker-library/memcached/pull/38
+		case "$gnuArch" in \
+# https://github.com/memcached/memcached/issues/381 "--enable-extstore on s390x (IBM System Z mainframe architecture) fails tests"
+			s390x-*) ;; \
+			*) echo '--enable-extstore' ;; \
+		esac \
+	)" \
+	&& ./configure \
+		--build="$gnuArch" \
+		--enable-sasl \
+		$enableExtstore \
+	&& make -j "$(nproc)" \
+	\
+# TODO https://github.com/memcached/memcached/issues/382 "t/chunked-extstore.t is flaky on arm32v6"
+	&& make test \
+	&& make install \
+	\
+	&& cd / && rm -rf /usr/src/memcached \
+	\
+	&& runDeps="$( \
+		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
+			| tr ',' '\n' \
+			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+	)" \
+	&& apk add --virtual .memcached-rundeps $runDeps \
+	&& apk del .build-deps \
+	\
+	&& memcached -V \
 	# ------------	
-	# 2. moodle
+	# ~. moodle
 	# ------------
     # git pull
     && mkdir -p $MOODLE_SOURCE \
