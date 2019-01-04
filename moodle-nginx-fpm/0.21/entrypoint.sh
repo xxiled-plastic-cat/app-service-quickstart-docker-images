@@ -208,7 +208,7 @@ echo "Starting Redis ..."
 redis-server &
 
 echo "Starting Memcached ..."
-/usr/bin/memcached -u memcached -v -m 128 -p 11211 -c 1024 -I 4M &
+memcached -u memcache &
 
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
     echo "NOT in AZURE, Start crond, log rotate..."
