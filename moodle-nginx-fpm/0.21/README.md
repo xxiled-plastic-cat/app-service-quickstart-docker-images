@@ -90,6 +90,18 @@ crond
 logrotate /etc/logrotate.conf
 ```
 
+## Tips of Memcached and Redis.
+1. Deploy to web app or run as docker, go to root page, and complete installation of site.
+2. Site administration -> Plugins -> Caching -> Category: Cache stores
+    - Setup Memcached, test servers: 127.0.0.1:11211
+    - Setup Redis, test servers: 127.0.0.1:6379
+3. Site administration -> Plugins -> Caching -> Test performance, make sure memcached/redis is working.
+4. Site administration -> Plugins -> Caching -> Configuration
+    - Add Instance of memcached.
+    - Add Instance of redis.
+    - Edit mappings of "Stores used when no mapping is present"
+
+
 ## Updating Moodle version , themes , files
 
 If ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = false  ( which is the default setting ) , we recommend you DO NOT update the Moodle core version , themes or files from Moodle admin dashboard.
@@ -113,7 +125,7 @@ There is a tradeoff between file server stability and file persistence . Since w
 ## Change Log
 - **Version 0.21**
   1. Update config.php, disable debuging by default.
-  2. remove memcached, it's not working.
+  2. Fix Bug of Memcached.
   
 - **Version 0.2**
   1. Upgrade php-fpm
