@@ -90,6 +90,10 @@ crond
 logrotate /etc/logrotate.conf
 ```
 
+# Choose Listen Type of php-fpm/nginx
+1. By default, ```LISTEN_TYPE``` = socket.
+2. Update App Setting ```LISTEN_TYPE``` = port if you perfer to listening from TCP/IP.
+
 ## Updating WordPress version , themes , files
 
 If ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = false  ( which is the default setting ) , we recommend you DO NOT update the WordPress core version , themes or files from WordPress admin dashboard.
@@ -120,6 +124,15 @@ There is a tradeoff between file server stability and file persistence . Since w
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
 
 ## Change Log
+- **Version 0.71**
+  1. Selectable listen type of php-fpm/nginx.
+  
+- **Version 0.71**
+  1. Upgrade php-fpm.
+  2. Upgrade phpmyadmin.
+  3. Add function log rotate. (It's disabed if deploy to web app of azure by default.)
+  4. Php-fpm and nginx are watched by supervisord. 
+
 - **Version 0.7**
   1. Upgrade php-fpm.
   2. Upgrade phpmyadmin.
