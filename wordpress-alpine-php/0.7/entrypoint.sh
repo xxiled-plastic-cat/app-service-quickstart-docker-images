@@ -91,14 +91,25 @@ setup_wordpress(){
     chown -R www-data:www-data $WORDPRESS_HOME    
 }
 
-update_wordpress_config(){    
+update_localdb_config(){    
 	DATABASE_HOST=${DATABASE_HOST:-127.0.0.1}
 	DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}
 	# if DATABASE_USERNAME equal phpmyadmin, it means it's nothing at beginning.
 	if [ "${DATABASE_USERNAME}" == "phpmyadmin" ]; then
 	    DATABASE_USERNAME='wordpress'
 	fi	
-	DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}   
+	DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
+    export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD   
+}
+
+show_wordpress_db_config(){
+    echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
+    echo "INFO: WORDPRESS_ENVS:"
+    echo "INFO: DATABASE_HOST:" $DATABASE_HOST
+    echo "INFO: WORDPRESS_DATABASE_NAME:" $DATABASE_NAME
+    echo "INFO: WORDPRESS_DATABASE_USERNAME:" $DATABASE_USERNAME
+    echo "INFO: WORDPRESS_DATABASE_PASSWORD:" $DATABASE_PASSWORD	        
+    echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
 }
 
 # setup server root
@@ -149,40 +160,32 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"    
 fi
 
-
 # That wp-config.php doesn't exist means WordPress is not installed/configured yet.
 if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
-	echo "INFO: $WORDPRESS_HOME/wp-config.php not found."
+	echo "INFO: $WORDPRESS_HOME/wp-config.php not found."    
 	echo "Installing WordPress for the first time ..." 
-	setup_wordpress	
-
+	setup_wordpress
+    chmod 777 $WORDPRESS_SOURCE/wp-config.php
+	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
+       echo "INFO: NOT in Azure, chown for wp-config.php"
+       chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
+    fi
 	if [ "${DATABASE_TYPE}" == "local" ]; then
         echo "INFO: local MariaDB is used."
-        update_wordpress_config
-        echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
-        echo "INFO: WORDPRESS_ENVS:"
-        echo "INFO: DATABASE_HOST:" $DATABASE_HOST
-        echo "INFO: WORDPRESS_DATABASE_NAME:" $DATABASE_NAME
-        echo "INFO: WORDPRESS_DATABASE_USERNAME:" $DATABASE_USERNAME
-        echo "INFO: WORDPRESS_DATABASE_PASSWORD:" $DATABASE_PASSWORD	        
-        echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
+        update_localdb_config
+        show_wordpress_db_config
         echo "Creating database for WordPress if not exists ..."
 	    mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`$DATABASE_NAME\` CHARACTER SET utf8 COLLATE utf8_general_ci;"
 	    echo "Granting user for WordPress ..."
-	    mysql -u root -e "GRANT ALL ON \`$DATABASE_NAME\`.* TO \`$DATABASE_USERNAME\`@\`$DATABASE_HOST\` IDENTIFIED BY '$DATABASE_PASSWORD'; FLUSH PRIVILEGES;"	
-         
-		cd $WORDPRESS_SOURCE && chmod 777 wp-config.php
-		if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
-           echo "INFO: NOT in Azure, chown for wp-config.php"
-           chown -R www-data:www-data wp-config.php
-        fi				
-        sed -i "s/getenv('DATABASE_NAME')/'${DATABASE_NAME}'/g" wp-config.php
-        sed -i "s/getenv('DATABASE_USERNAME')/'${DATABASE_USERNAME}'/g" wp-config.php
-        sed -i "s/getenv('DATABASE_PASSWORD')/'${DATABASE_PASSWORD}'/g" wp-config.php
-        sed -i "s/getenv('DATABASE_HOST')/'${DATABASE_HOST}'/g" wp-config.php
-		cd $WORDPRESS_HOME
-		cp $WORDPRESS_SOURCE/wp-config.php .
-	fi
+	    mysql -u root -e "GRANT ALL ON \`$DATABASE_NAME\`.* TO \`$DATABASE_USERNAME\`@\`$DATABASE_HOST\` IDENTIFIED BY '$DATABASE_PASSWORD'; FLUSH PRIVILEGES;"
+        cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
+	else
+        if [ $DATABASE_HOST ]; then
+            echo "INFO: External Mysql is used."                
+            show_wordpress_db_config
+      	    cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
+        fi
+	fi   
 else
 	echo "INFO: $WORDPRESS_HOME/wp-config.php already exists."
 	echo "INFO: You can modify it manually as need."
