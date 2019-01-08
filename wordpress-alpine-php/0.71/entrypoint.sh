@@ -147,7 +147,14 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
     mysql -u root -e "GRANT ALL ON *.* TO \`$DATABASE_USERNAME\`@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD' WITH GRANT OPTION; FLUSH PRIVILEGES;"
     # create default database 'azurelocaldb'
-    mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"    
+    mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"
+    echo "INFO: local MariaDB is used."
+    update_localdb_config
+    show_wordpress_db_config
+    echo "Creating database for WordPress if not exists ..."
+	mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`$DATABASE_NAME\` CHARACTER SET utf8 COLLATE utf8_general_ci;"
+	echo "Granting user for WordPress ..."
+	mysql -u root -e "GRANT ALL ON \`$DATABASE_NAME\`.* TO \`$DATABASE_USERNAME\`@\`$DATABASE_HOST\` IDENTIFIED BY '$DATABASE_PASSWORD'; FLUSH PRIVILEGES;"        
 fi
 
 # That wp-config.php doesn't exist means WordPress is not installed/configured yet.
@@ -159,22 +166,15 @@ if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
 	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
        echo "INFO: NOT in Azure, chown for wp-config.php"
        chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
-    fi
-	if [ "${DATABASE_TYPE}" == "local" ]; then
-        echo "INFO: local MariaDB is used."
-        update_localdb_config
-        show_wordpress_db_config
-        echo "Creating database for WordPress if not exists ..."
-	    mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`$DATABASE_NAME\` CHARACTER SET utf8 COLLATE utf8_general_ci;"
-	    echo "Granting user for WordPress ..."
-	    mysql -u root -e "GRANT ALL ON \`$DATABASE_NAME\`.* TO \`$DATABASE_USERNAME\`@\`$DATABASE_HOST\` IDENTIFIED BY '$DATABASE_PASSWORD'; FLUSH PRIVILEGES;"
+    fi    
+	if [ "${DATABASE_TYPE}" == "local" ]; then        
         cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
 	else
         if [ $DATABASE_HOST ]; then
             echo "INFO: External Mysql is used."                
             show_wordpress_db_config
-      	    cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
-        fi
+            cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
+        fi        
 	fi   
 else
 	echo "INFO: $WORDPRESS_HOME/wp-config.php already exists."
