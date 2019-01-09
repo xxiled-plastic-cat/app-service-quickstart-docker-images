@@ -201,6 +201,8 @@ COPY moodle_src/. $MOODLE_SOURCE/
 # php
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
 COPY php.ini /usr/local/etc/php/php.ini
+COPY www.conf /usr/local/etc/php/conf.d/
+COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 # mariadb
 COPY my.cnf /etc/mysql/my.cnf
 # phpmyadmin
