@@ -82,7 +82,6 @@ setup_moodle(){
 	    git branch --track $GIT_BRANCH origin/$GIT_BRANCH && git checkout $GIT_BRANCH
 	fi
     cp -rf $MOODLE_SOURCE/installlib.php $MOODLE_HOME/moodle/lib/installlib.php    
-    mkdir -p $MOODLE_HOME/moodledata    
     chmod -R 777 $MOODLE_HOME
     if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
         echo "INFO: NOT in Azure, chown for "$MOODLE_HOME  
@@ -95,26 +94,13 @@ update_db_config(){
 	DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}
     DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
     DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
-    export DATABASE_HOST
-    export DATABASE_NAME
-    export DATABASE_USERNAME
-    export DATABASE_PASSWORD	 
+    export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD    
 }
 
 # setup server root
 test ! -d "$MOODLE_HOME" && echo "INFO: $MOODLE_HOME not found. creating..." && mkdir -p "$MOODLE_HOME"
 
 echo "Setup openrc ..." && openrc && touch /run/openrc/softlevel
-
-echo "INFO: creating /run/php/php7.0-fpm.sock ..."
-test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
-mkdir -p /run/php
-touch /run/php/php7.0-fpm.sock
-if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
-    echo "INFO: NOT in Azure, chown for /run/php/php7.0-fpm.sock"  
-    chown -R www-data:www-data /run/php/php7.0-fpm.sock 
-fi 
-chmod 777 /run/php/php7.0-fpm.sock
 
 DATABASE_TYPE=$(echo ${DATABASE_TYPE}|tr '[A-Z]' '[a-z]')
 
@@ -155,8 +141,7 @@ if [ ! -e "$MOODLE_HOME/moodle/config.php" ]; then
 	if [ ${DATABASE_HOST} ]; then
         echo "INFO: Update config.php..."
         
-        cd $MOODLE_HOME/moodle
-		cp $MOODLE_SOURCE/config.php .
+        cd $MOODLE_HOME/moodle && cp $MOODLE_SOURCE/config.php . 
         chmod 777 config.php
 
 		if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
@@ -169,12 +154,12 @@ if [ ! -e "$MOODLE_HOME/moodle/config.php" ]; then
         else
             sed -i "s/getenv('DATABASE_TYPE')/'mysqli'/g" config.php
         fi
-        sed -i "s/getenv('DATABASE_NAME')/'${DATABASE_NAME}'/g" config.php
-        sed -i "s/getenv('DATABASE_USERNAME')/'${DATABASE_USERNAME}'/g" config.php
-        sed -i "s/getenv('DATABASE_PASSWORD')/'${DATABASE_PASSWORD}'/g" config.php
-        sed -i "s/getenv('DATABASE_HOST')/'${DATABASE_HOST}'/g" config.php
+        # sed -i "s/getenv('DATABASE_NAME')/'${DATABASE_NAME}'/g" config.php
+        # sed -i "s/getenv('DATABASE_USERNAME')/'${DATABASE_USERNAME}'/g" config.php
+        # sed -i "s/getenv('DATABASE_PASSWORD')/'${DATABASE_PASSWORD}'/g" config.php
+        # sed -i "s/getenv('DATABASE_HOST')/'${DATABASE_HOST}'/g" config.php
     else 
-        echo "INFO: DATABASE_HOST: ${DATABASE_HOST}"			        
+        echo "INFO: DATABASE_HOST isn't exist, please fill parameters during installation!"			        
 	fi
 else
 	echo "INFO: $MOODLE_HOME/moodle/config.php already exists."
@@ -203,6 +188,11 @@ else
     #/usr/local/etc/php-fpm.d/zz-docker.conf 
     sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/9000/g" /usr/local/etc/php-fpm.d/zz-docker.conf 
 fi
+
+# Set Cache path of moodle
+mkdir -p $MOODLE_HOME/moodledata/filedir && mkdir -p /var/moodledata 
+ln -s $MOODLE_HOME/moodledata/filedir /var/moodledata/filedir 
+chmod -R 777 /var/moodledata && chmod -R 777 $MOODLE_HOME/moodledata/filedir
 
 echo "Starting Redis ..."
 redis-server &
