@@ -102,15 +102,15 @@ update_localdb_config(){
     export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD   
 }
 
-show_wordpress_db_config(){
-    echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
-    echo "INFO: WORDPRESS_ENVS:"
-    echo "INFO: DATABASE_HOST:" $DATABASE_HOST
-    echo "INFO: WORDPRESS_DATABASE_NAME:" $DATABASE_NAME
-    echo "INFO: WORDPRESS_DATABASE_USERNAME:" $DATABASE_USERNAME
-    echo "INFO: WORDPRESS_DATABASE_PASSWORD:" $DATABASE_PASSWORD	        
-    echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
-}
+# show_wordpress_db_config(){
+#     echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
+#     echo "INFO: WORDPRESS_ENVS:"
+#     echo "INFO: DATABASE_HOST:" $DATABASE_HOST
+#     echo "INFO: WORDPRESS_DATABASE_NAME:" $DATABASE_NAME
+#     echo "INFO: WORDPRESS_DATABASE_USERNAME:" $DATABASE_USERNAME
+#     echo "INFO: WORDPRESS_DATABASE_PASSWORD:" $DATABASE_PASSWORD	        
+#     echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
+# }
 
 # setup server root
 test ! -d "$WORDPRESS_HOME" && echo "INFO: $WORDPRESS_HOME not found. creating..." && mkdir -p "$WORDPRESS_HOME"
@@ -150,7 +150,7 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     mysql -u root -e "CREATE DATABASE IF NOT EXISTS azurelocaldb; FLUSH PRIVILEGES;"
     echo "INFO: local MariaDB is used."
     update_localdb_config
-    show_wordpress_db_config
+    # show_wordpress_db_config
     echo "Creating database for WordPress if not exists ..."
 	mysql -u root -e "CREATE DATABASE IF NOT EXISTS \`$DATABASE_NAME\` CHARACTER SET utf8 COLLATE utf8_general_ci;"
 	echo "Granting user for WordPress ..."
@@ -172,7 +172,7 @@ if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
 	else
         if [ $DATABASE_HOST ]; then
             echo "INFO: External Mysql is used."                
-            show_wordpress_db_config
+            # show_wordpress_db_config
             cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
         fi        
 	fi   
@@ -195,27 +195,12 @@ test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp 
 test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
 test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
 
-# Set php-fpm listen type
-# By default, It's socket.
-# LISTEN_TYPE==port, It's port.
-LISTEN_TYPE=${LISTEN_TYPE:-socket}
-LISTEN_TYPE=$(echo ${LISTEN_TYPE}|tr '[A-Z]' '[a-z]')
-if [ "${LISTEN_TYPE}" == "socket" ]; then  
-    echo "INFO: creating /run/php/php7.0-fpm.sock ..."
-    test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
-    mkdir -p /run/php
-    touch /run/php/php7.0-fpm.sock
-    chown www-data:www-data /run/php/php7.0-fpm.sock
-    chmod 777 /run/php/php7.0-fpm.sock
-else
-    echo "INFO: PHP-FPM listener is 127.0.0.1:9000 ..."    
-    #/etc/nginx/conf.d/default.conf
-    sed -i "s/unix:\/var\/run\/php\/php7.0-fpm.sock/127.0.0.1:9000/g" /etc/nginx/conf.d/default.conf
-    #/usr/local/etc/php/conf.d/www.conf
-    sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/127.0.0.1:9000/g" /usr/local/etc/php/conf.d/www.conf
-    #/usr/local/etc/php-fpm.d/zz-docker.conf 
-    sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/9000/g" /usr/local/etc/php-fpm.d/zz-docker.conf 
-fi
+echo "INFO: creating /run/php/php7.0-fpm.sock ..."
+test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
+mkdir -p /run/php
+touch /run/php/php7.0-fpm.sock
+chown www-data:www-data /run/php/php7.0-fpm.sock
+chmod 777 /run/php/php7.0-fpm.sock
 
 echo "Starting SSH ..."
 echo "Starting php-fpm ..."

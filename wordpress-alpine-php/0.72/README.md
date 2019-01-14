@@ -124,9 +124,10 @@ There is a tradeoff between file server stability and file persistence . Since w
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
 
 ## Change Log
-- **Version 0.71**
-  1. Selectable listen type of php-fpm/nginx.
-  
+
+- **Version 0.72**
+  1. Fix Permission denied of log files issue of supervisord.
+
 - **Version 0.71**
   1. Upgrade php-fpm.
   2. Upgrade phpmyadmin.
