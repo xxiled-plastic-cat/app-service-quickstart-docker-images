@@ -125,6 +125,8 @@ There is a tradeoff between file server stability and file persistence . Since w
 ## Change Log
 - **Version 0.22**
   1. Change the cache path, improve performance.
+  2. Fix permission denide issue of supervisor.
+  3. Fix Bug of restart.
   
 - **Version 0.21**
   1. Update config.php, disable debuging by default.
