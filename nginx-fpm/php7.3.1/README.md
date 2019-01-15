@@ -8,8 +8,8 @@ This repository contains docker images that are used for App Service Linux. Some
 ## Components
 This docker image currently contains the following components:
 
-1. Nginx (1.14.0)   
-2. PHP (7.2.13) 
+1. Nginx (1.14.2)   
+2. PHP (7.3.1) 
 3. MariaDB ( 10.1.26/if using Local Database )
 4. Phpmyadmin ( 4.8.4/if using Local Database )
 
@@ -46,7 +46,7 @@ ps aux
 # Kill master process of php-fpm
 kill -INT <gid>
 # start php-fpm again
-php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
+php-fpm -D && chmod 777 /run/php/php-fpm.sock
 ```
 5. Xdebug is turned on.
 
@@ -63,6 +63,9 @@ php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version php7.3.1** 
+  1. Upgrade version of php to 7.3.1.
+  2. Upgrade nginx version to 1.14.2.  
 - **Version php7.2.13** 
   1. Upgrade version of php to 7.2.13.
   2. Upgrade phpmyadmin to 4.8.4.

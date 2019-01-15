@@ -1,5 +1,6 @@
 /home/LogFiles/supervisor/*.log{
 	su nginx nginx
-	maxsize 10M
-	rotate 20	
+	maxsize 1M
+	rotate 20
+	olddir /home/LogFiles/olddir
 }

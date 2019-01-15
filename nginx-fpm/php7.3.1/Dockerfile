@@ -1,12 +1,12 @@
-FROM php:7.2.13-fpm-alpine3.8
-MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
+FROM php:7.3.1-fpm-alpine3.8
+LABEL maintainer Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
 # ========
 # ssh
 ENV SSH_PASSWD "root:Docker!"
 #nginx
-ENV NGINX_VERSION 1.14.0
+ENV NGINX_VERSION 1.14.2
 ENV NGINX_LOG_DIR "/home/LogFiles/nginx"
 #php
 ENV PHP_HOME "/usr/local/etc/php"
@@ -93,11 +93,11 @@ RUN set -ex \
 # openrc service
 #---------------
    && apk add --no-cache openrc \
-   && sed -i 's/"cgroup_add_service/" # cgroup_add_service/g' /lib/rc/sh/openrc-run.sh
+   && sed -i 's/"cgroup_add_service/" # cgroup_add_service/g' /lib/rc/sh/openrc-run.sh \
 # ----------
 # Nginx
 # ----------   
-RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
+    && GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 	&& CONFIG="\
 		--prefix=/etc/nginx \
 		--sbin-path=/usr/sbin/nginx \
@@ -154,7 +154,7 @@ RUN GPG_KEYS=B0F4253373F8F6F510D42178520A9993A1C052F8 \
 		zlib-dev \
 		linux-headers \
 		curl \
-		gnupg \
+		gnupg1 \
 		libxslt-dev \
 		gd-dev \
 		geoip-dev \
