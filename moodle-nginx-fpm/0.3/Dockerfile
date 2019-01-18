@@ -1,7 +1,7 @@
 #
 # Dockerfile for moodle
 #
-FROM appsvcorg/nginx-fpm:php7.2.13
+FROM appsvcorg/nginx-fpm:php7.3.1
 LABEL maintainer ="Azure App Service Container Images <appsvc-images@microsoft.com>"
 # ========
 # ENV vars
@@ -25,7 +25,7 @@ ENV PHPMYADMIN_HOME "/home/phpmyadmin"
 ENV MOODLE_HOME "/home/site/wwwroot"
 ENV MOODLE_SOURCE "/usr/src/moodle"
 # redis
-ENV PHPREDIS_VERSION 3.1.2
+ENV PHPREDIS_VERSION 4.2.0
 # memcached
 ENV MEMCACHED_VERSION 1.5.12
 ENV MEMCACHED_SHA1 f67096ba64b0c47668bcad5b680010c4f8987d4c
@@ -80,7 +80,8 @@ RUN set -ex \
                 libssh2-dev                 \
                 libxslt-dev                 \
                 libmemcached-libs           \
-                zlib                        \
+                zlib-dev                    \
+                libzip-dev                  \
     # Install igbinary (memcached's deps)
     && pecl install igbinary \
     # Install memcached
@@ -94,10 +95,7 @@ RUN set -ex \
         cd /tmp/ \
     ) \
     && docker-php-ext-enable igbinary memcached \
-    # # Install mongodb
-    # && pecl install mongodb \
-    # # Enable PHP extensions
-    # && docker-php-ext-enable mongodb \    
+    #    
 	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
     && docker-php-ext-install -j "$(nproc)" gd zip redis xmlrpc soap intl \    
     && find /usr/local/lib/php/extensions -name '*.a' -delete \
@@ -192,8 +190,7 @@ RUN set -ex \
 # Configure
 # =========
 # nginx
-COPY nginx_conf/. /etc/nginx/conf.d/
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY default.conf /etc/nginx/conf.d/
 # =====
 # final
 # =====
@@ -201,12 +198,8 @@ COPY moodle_src/. $MOODLE_SOURCE/
 # php
 COPY opcache-recommended.ini /usr/local/etc/php/conf.d/opcache-recommended.ini
 COPY php.ini /usr/local/etc/php/php.ini
-COPY www.conf /usr/local/etc/php/conf.d/
-COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 # mariadb
 COPY my.cnf /etc/mysql/my.cnf
-# phpmyadmin
-COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/
 #
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh

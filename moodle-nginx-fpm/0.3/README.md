@@ -5,10 +5,12 @@ This is a Moodle Docker image which can run on both [Azure Web App on Linux](htt
 This docker image currently contains the following components:
 
 1. Moodle
-2. Nginx(1.14.0)
-3. PHP (7.2.13)
+2. Nginx (1.14.2)
+3. PHP (7.3.1)
 4. MariaDB ( 10.1.26/if using Local Database )
-5. Phpmyadmin ( 4.8.3/if using Local Database )
+5. Phpmyadmin ( 4.8.4/if using Local Database )
+6. local Redis server
+7. local memcache server
 
 ## How to configure to use Azure Database for MySQL with web app 
 1. Create a Web App for Containers
@@ -123,6 +125,11 @@ There is a tradeoff between file server stability and file persistence . Since w
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
 
 ## Change Log
+- **Version 0.3**
+  1. Update the version of php-fpm.
+  2. Update the version of redis extension.
+  3. Update the version of nginx.
+  
 - **Version 0.22**
   1. Change the cache path, improve performance.
   2. Fix permission denide issue of supervisor.

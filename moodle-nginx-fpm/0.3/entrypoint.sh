@@ -56,9 +56,8 @@ setup_phpmyadmin(){
     cd $PHPMYADMIN_SOURCE
     tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME --strip-components=1
     cp -R phpmyadmin-config.inc.php $PHPMYADMIN_HOME/config.inc.php    
-    cp -R phpmyadmin-default.conf /etc/nginx/conf.d/default.conf
-	cd /
-    rm -rf $PHPMYADMIN_SOURCE
+    sed -i "/# Add locations of phpmyadmin here./r $PHPMYADMIN_SOURCE/phpmyadmin-locations.txt" /etc/nginx/conf.d/default.conf
+	cd /    
     if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
         echo "INFO: NOT in Azure, chown for "$PHPMYADMIN_HOME  
         chown -R www-data:www-data $PHPMYADMIN_HOME
@@ -166,12 +165,12 @@ else
 	echo "INFO: You can modify it manually as need."    
 fi	
 
-echo "INFO: creating /run/php/php7.0-fpm.sock ..."
-test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
+echo "INFO: creating /run/php/php-fpm.sock ..."
+test -e /run/php/php-fpm.sock && rm -f /run/php/php-fpm.sock
 mkdir -p /run/php
-touch /run/php/php7.0-fpm.sock
-chown www-data:www-data /run/php/php7.0-fpm.sock
-chmod 777 /run/php/php7.0-fpm.sock
+touch /run/php/php-fpm.sock
+chown www-data:www-data /run/php/php-fpm.sock
+chmod 777 /run/php/php-fpm.sock
 
 # Set Cache path of moodle
 mkdir -p $MOODLE_HOME/moodledata/filedir && mkdir -p /var/moodledata 
