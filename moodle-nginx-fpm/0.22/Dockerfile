@@ -42,6 +42,8 @@ COPY phpmyadmin-default.conf $PHPMYADMIN_SOURCE/
 # =====
 # final
 # =====
+# supervisor
+COPY supervisord.conf /etc/
 #
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
