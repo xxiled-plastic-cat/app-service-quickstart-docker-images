@@ -30,6 +30,9 @@ ENV WORDPRESS_HOME "/home/site/wwwroot"
 ENV DOCKER_BUILD_HOME "/dockerbuild"
 # ====================
 # ====================
+# wordpress
+COPY wp-config.php $WORDPRESS_SOURCE/
+COPY ssl-settings.txt $WORDPRESS_SOURCE/
 # supervisor
 COPY supervisord.conf /etc/
 # php

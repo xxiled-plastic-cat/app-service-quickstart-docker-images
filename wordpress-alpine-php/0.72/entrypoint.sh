@@ -178,7 +178,15 @@ if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
 	fi   
 else
 	echo "INFO: $WORDPRESS_HOME/wp-config.php already exists."
-	echo "INFO: You can modify it manually as need."
+    # 'localhost' isn't acceptable since 0.7X.
+    sed -i "s/'localhost'/'127.0.0.1'/g" $WORDPRESS_HOME/wp-config.php
+    echo "INFO: Check SSL Setting..."    
+    if [ -z $(grep "\$_SERVER\['HTTPS'\] = 'on';" $WORDPRESS_HOME/wp-config.php) ];then
+        echo "INFO: Add SSL Setting..."
+        sed -i "/stop editing!/r $WORDPRESS_SOURCE/ssl-settings.txt" $WORDPRESS_HOME/wp-config.php        
+    else        
+        echo "INFO: SSL Setting is exist!"
+    fi
 fi
 
 echo "Starting Redis ..."

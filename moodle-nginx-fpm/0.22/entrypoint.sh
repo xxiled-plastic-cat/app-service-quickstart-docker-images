@@ -1,6 +1,7 @@
 #!/bin/bash
 
 #set -e
+php -v
 setup_mariadb_data_dir(){
     test ! -d "$MARIADB_DATA_DIR" && echo "INFO: $MARIADB_DATA_DIR not found. creating ..." && mkdir -p "$MARIADB_DATA_DIR"
 
@@ -65,6 +66,12 @@ setup_phpmyadmin(){
 }    
 
 setup_moodle(){
+    while test -d "$MOODLE_HOME/moodle"
+    do
+        echo "INFO: $MOODLE_HOME/moodle is exist, clean it ..."
+        # mv is faster than rm.    
+        mv $MOODLE_HOME/moodle /home/bak/moodle$(date +%s)
+    done
 	test ! -d "$MOODLE_HOME" && echo "INFO: $MOODLE_HOME not found. creating ..." && mkdir -p "$MOODLE_HOME"
 	cd $MOODLE_HOME
     GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/moodle-linuxappservice-azure}
@@ -86,7 +93,7 @@ setup_moodle(){
     if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
         echo "INFO: NOT in Azure, chown for "$MOODLE_HOME  
         chown -R www-data:www-data $MOODLE_HOME
-    fi 
+    fi    
 }
 
 update_db_config(){    
@@ -97,13 +104,10 @@ update_db_config(){
     export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD    
 }
 
-# setup server root
-test ! -d "$MOODLE_HOME" && echo "INFO: $MOODLE_HOME not found. creating..." && mkdir -p "$MOODLE_HOME"
 
 echo "Setup openrc ..." && openrc && touch /run/openrc/softlevel
 
 DATABASE_TYPE=$(echo ${DATABASE_TYPE}|tr '[A-Z]' '[a-z]')
-
 if [ "${DATABASE_TYPE}" == "local" ]; then
     echo "Starting MariaDB and PHPMYADMIN..."    
     echo 'mysql.default_socket = /run/mysqld/mysqld.sock' >> $PHP_CONF_FILE     
@@ -121,9 +125,7 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     echo "Granting user for phpMyAdmin ..."
     # Set default value of username/password if they are't exist/null.
     update_db_config
-    # DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
-    # DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
-	echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
+    echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
     echo "phpmyadmin username:" $DATABASE_USERNAME
     echo "phpmyadmin password:" $DATABASE_PASSWORD
     echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
@@ -132,14 +134,15 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     setup_phpmyadmin    
 fi
 
+# setup Moodle
 # That config.php doesn't exist means moodle is not installed/configured yet.
-if [ ! -e "$MOODLE_HOME/moodle/config.php" ]; then
+if [ ! -e "$MOODLE_HOME/moodle/config.php" ]; then    
 	echo "INFO: $MOODLE_HOME/moodle/config.php not found."
 	echo "Installing Moodle for the first time ..." 
 	setup_moodle	
 
 	if [ ${DATABASE_HOST} ]; then
-        echo "INFO: Update config.php..."
+        echo "INFO: DB Parameters are setted, Update config.php..."
         
         cd $MOODLE_HOME/moodle && cp $MOODLE_SOURCE/config.php . 
         chmod 777 config.php
@@ -152,42 +155,23 @@ if [ ! -e "$MOODLE_HOME/moodle/config.php" ]; then
             #$CFG->dbtype    = 'mariadb';
             sed -i "s/getenv('DATABASE_TYPE')/'mariadb'/g" config.php
         else
+            #$CFG->dbtype    = 'mysqli';
             sed -i "s/getenv('DATABASE_TYPE')/'mysqli'/g" config.php
-        fi
-        # sed -i "s/getenv('DATABASE_NAME')/'${DATABASE_NAME}'/g" config.php
-        # sed -i "s/getenv('DATABASE_USERNAME')/'${DATABASE_USERNAME}'/g" config.php
-        # sed -i "s/getenv('DATABASE_PASSWORD')/'${DATABASE_PASSWORD}'/g" config.php
-        # sed -i "s/getenv('DATABASE_HOST')/'${DATABASE_HOST}'/g" config.php
+        fi        
     else 
         echo "INFO: DATABASE_HOST isn't exist, please fill parameters during installation!"			        
 	fi
 else
 	echo "INFO: $MOODLE_HOME/moodle/config.php already exists."
-	echo "INFO: You can modify it manually as need."
+	echo "INFO: You can modify it manually as need."    
 fi	
 
-
-# Set php-fpm listen type
-# By default, It's socket.
-# LISTEN_TYPE==port, It's port.
-LISTEN_TYPE=${LISTEN_TYPE:-socket}
-LISTEN_TYPE=$(echo ${LISTEN_TYPE}|tr '[A-Z]' '[a-z]')
-if [ "${LISTEN_TYPE}" == "socket" ]; then  
-    echo "INFO: creating /run/php/php7.0-fpm.sock ..."
-    test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
-    mkdir -p /run/php
-    touch /run/php/php7.0-fpm.sock
-    chown www-data:www-data /run/php/php7.0-fpm.sock
-    chmod 777 /run/php/php7.0-fpm.sock
-else
-    echo "INFO: PHP-FPM listener is 127.0.0.1:9000 ..."    
-    #/etc/nginx/conf.d/default.conf
-    sed -i "s/unix:\/var\/run\/php\/php7.0-fpm.sock/127.0.0.1:9000/g" /etc/nginx/conf.d/default.conf
-    #/usr/local/etc/php/conf.d/www.conf
-    sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/127.0.0.1:9000/g" /usr/local/etc/php/conf.d/www.conf
-    #/usr/local/etc/php-fpm.d/zz-docker.conf 
-    sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/9000/g" /usr/local/etc/php-fpm.d/zz-docker.conf 
-fi
+echo "INFO: creating /run/php/php7.0-fpm.sock ..."
+test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
+mkdir -p /run/php
+touch /run/php/php7.0-fpm.sock
+chown www-data:www-data /run/php/php7.0-fpm.sock
+chmod 777 /run/php/php7.0-fpm.sock
 
 # Set Cache path of moodle
 mkdir -p $MOODLE_HOME/moodledata/filedir && mkdir -p /var/moodledata 
@@ -206,6 +190,8 @@ if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
 fi 
 
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
+test ! -e "$SUPERVISOR_LOG_DIR/supervisord.log" && echo "INFO: $SUPERVISOR_LOG_DIR/supervisord.log not found. creating ..." && touch $SUPERVISOR_LOG_DIR/supervisord.log
+chmod 777 $SUPERVISOR_LOG_DIR/supervisord.log
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
 test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
