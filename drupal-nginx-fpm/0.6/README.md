@@ -23,6 +23,40 @@ This docker image currently contains the following components:
 3. Browse your site and wait almost 10 mins, you will see install page of Drupal.
 4. Complete Drupal install.
 
+### How to connect external data resources, e.g., Azure Database for MySQL & Azure Redis Cache
+
+Connecting other Azure services to your Web App is easy.  The following services are commonly used with Drupal:
+
+  * Database for MySQL
+  * OMS Log Analytics
+  * Redis Cache
+
+To connect an external service:
+1. Create the resource in Azure
+1. Add credentials/keys in App Settings for your Web App for Containers instance.  E.g., 
+  * MYSQL_DATABASE=my_db_database
+  * MYSQL_HOST=my_db_host
+  * MYSQL_USERNAME=my_db_user
+  * MYSQL_PASSWORD=my_db_password
+  * MYSQL_PORT=3306
+  * REDIS_HOST=my_redis_host
+  * REDIS_PORT=6379
+  * REDIS_PASSWORD=my_redis_password
+  * OMSWORKSPACE_ID=my_oms_workspace_id
+  * OMSWORKSPACE_PRIMARY_KEY=my_oms_workspace_primary_key
+1. Access the App Settings as environment variable in your settings.php file (or elsewhere as needed).  For example, the MYSQL_DATABASE environment variable can be accessed from within PHP via the `getenv` command, such as `$mysql_db = getenv('APPSETTINGS_MYSQL_DATABASE');`.
+
+#### Using the fluentd plugin for Azure Log Analytics
+
+OMS Log Analytics can be used to conveniently centralize logs across all container instances. This image includes a default configuration for fluentd that will capture the nginx access and error logs.
+
+To use the default configuration, just add the following App Settings to your Web App:
+
+  * OMSWORKSPACE_ID=my_oms_workspace_id
+  * OMSWORKSPACE_PRIMARY_KEY=my_oms_workspace_primary_key
+
+When the environment variable `APPSETTING_OMSWORKSPACE_ID` is detected, entrypoint.sh will add the default fluentd configuration to the services managed by supervisord.
+
 ## How to configure GIT Repo and Branch
 1. Create a Web App for Containers
 2. Add new App Settings
@@ -127,6 +161,11 @@ composer require drupal/adminimal_theme
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 1800, suggest to set it as 900 when using this version.
 
 ## Change Log
+- **Version 0.6**
+  1. Added [fluent-plugin-azure-loganalytics](https://github.com/yokawasa/fluent-plugin-azure-loganalytics) for centralized logging via OMS (instead of [OMS Agent for Linux](https://github.com/Microsoft/OMS-Agent-for-Linux) which is [not compatible with Alpine Linux's apk](https://github.com/Microsoft/OMS-Agent-for-Linux#supported-linux-operating-systems)).
+  2. Added MIME type declarations for common webfonts in nginx.conf.
+  3. Added [phpredis](https://github.com/phpredis/phpredis) extension.
+  4. Added imagemagick
 - **Version 0.5**
   1. Upgrade php-fpm/composer
   2. Upgrade phpmyadmin.

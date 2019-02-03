@@ -4,6 +4,8 @@
 
 php -v
 
+AZURE_DETECTED=$WEBSITES_ENABLE_APP_SERVICE_STORAGE # if defined, assume the container is running on Azure
+
 setup_mariadb_data_dir(){
     test ! -d "$MARIADB_DATA_DIR" && echo "INFO: $MARIADB_DATA_DIR not found. creating ..." && mkdir -p "$MARIADB_DATA_DIR"
 
@@ -134,7 +136,7 @@ setup_drupal(){
     ln -s $DRUPAL_PRJ/web  $DRUPAL_HOME           	
 }
 
-if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
+if [ ! $AZURE_DETECTED ]; then 
     echo "INFO: NOT in Azure, chown for "$DRUPAL_HOME 
     chown -R www-data:www-data $DRUPAL_HOME
 fi
@@ -199,9 +201,21 @@ else
     setup_drupal   
 fi
 
-if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
-    echo "INFO: NOT in Azure, chown for "$DRUPAL_PRJ  
+if [ ! $AZURE_DETECTED ]; then
+    echo "INFO: NOT in Azure, chown for $DRUPAL_PRJ"
     chown -R www-data:www-data $DRUPAL_PRJ 
+    echo "INFO: NOT in Azure, skipping fluentd setup..."
+else
+    if [ ! $APPSETTING_OMSWORKSPACE_ID ]; then
+        echo 'INFO: Environment variable APPSETTING_OMSWORKSPACE_ID not found. Skipping fluentd setup...'
+    else
+        echo 'INFO: Azure detected. Adding fluentd to /etc/supervisord.conf...'
+        echo_default_fluentd_config() {
+            echo '[program:fluentd]'
+            echo 'command=fluentd -c /etc/fluent.conf -o /var/log/fluentd.log --log-rotate-age=3 --log-rotate-size 10240000' 
+        }
+        echo_default_fluentd_config >> /etc/supervisord.conf
+    fi
 fi
 
 # Set php-fpm listen type

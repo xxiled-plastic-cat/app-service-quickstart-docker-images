@@ -48,6 +48,7 @@ RUN set -ex \
                 cyrus-sasl-dev              \
                 git                         \
                 autoconf                    \
+                build-base                  \ 
                 g++                         \
                 libtool                     \
                 make                        \
@@ -67,11 +68,18 @@ RUN set -ex \
             imagemagick-dev                 \
             libssh2                         \
             libssh2-dev                     \
-            libxslt-dev                     \		                  
+            libxslt-dev                     \
+            ruby-dev                        \
+            gnupg                           \	                  
+    && echo 'Installing redis PHP extension...' \
+    && pecl install redis-4.2.0 \
+    && docker-php-ext-enable redis \
+    &&  echo 'Configuring gd PHP extension...' \
 	&& docker-php-ext-configure gd \
 		--with-freetype-dir=/usr/include/ \
 		--with-jpeg-dir=/usr/include/ \
 		--with-png-dir=/usr/include/ \
+    && echo 'Installing gd & zip PHP extensions...' \
 	&& docker-php-ext-install -j "$(nproc)" \
 		gd \		
 		zip \		
@@ -81,8 +89,7 @@ RUN set -ex \
 			| sort -u \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
-	&& apk add --virtual .drupal-phpexts-rundeps $runDeps \
-	&& apk del .build-dependencies \	
+	&& apk add --virtual .drupal-phpexts-rundeps $runDeps \	
 	&& docker-php-source delete \
     # session_save_path
     && mkdir -p /usr/local/php/tmp \
@@ -113,10 +120,22 @@ RUN set -ex \
     && rm -rf /var/log/varnish \
 	&& ln -s $VARNISH_LOG_DIR /var/log/varnish \
 # ----------
+# 5. fluent-plugin-azure-loganalytics
+# ----------
+    && echo 'Installing fluent-plugin-azure-lognalaytics (and dependencies)...' \
+    && apk add --no-cache ruby ruby-irb ruby-etc ruby-webrick imagemagick \
+    && echo 'gem: --no-document' >> /etc/gemrc \
+    && gem install oj:3.3.10 \ 
+                json:2.1.0 \
+                fluentd:1.3.2 \ 
+                bigdecimal:1.3.5 \
+    && gem install fluent-plugin-azure-loganalytics \
+# ----------
 # ~. clean up
 # ----------
+    && apk del .build-dependencies \	
 	&& apk upgrade \
-	&& rm -rf /var/cache/apk/* 
+	&& rm -rf /var/cache/apk/* /usr/lib/ruby/gems/*/cache/*.gem /usr/src/ruby
 # =========
 # Configure
 # =========
@@ -126,6 +145,7 @@ RUN rm -rf $DOCKER_BUILD_HOME
 COPY my.cnf /etc/mysql/
 # nginx
 COPY spec-settings.conf /etc/nginx/conf.d/
+COPY mime-font.types /etc/nginx
 COPY nginx.conf /etc/nginx/
 RUN rm -rf /etc/nginx/conf.d/default.conf
 # php
@@ -136,6 +156,8 @@ COPY drupal-database-install-tasks.php ${DRUPAL_SOURCE}
 COPY phpmyadmin_src/. $PHPMYADMIN_SOURCE/
 # Varinish
 COPY default.vcl /etc/varnish/default.vcl
+# fluent-plugin-azure-loganalytics
+COPY fluent.conf /etc/
 # =====
 # final
 # =====
