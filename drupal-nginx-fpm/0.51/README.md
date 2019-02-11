@@ -74,6 +74,19 @@ GIT_BRANCH | master
 >
 >Note: ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true, and /home/site/wwwroot/sites/default/settings.php is exist, it will not pull again after restart.
 
+## Best practice to use External Database, such as Azure Database for MySQL.
+1. Create a Azure Database for MySQL, create a DB.  [Reference]( https://docs.microsoft.com/en-us/azure/mysql/)
+    - SSL enforce status: DISABLED
+    - Update Connection security, edit Firewall rules, add allow IP list.
+2. Create a "web app for container", set docker image as this one.
+3. Before trigger web app, add below app settings:
+    - DATABASE_HOST: [db_host]
+    - DATABASE_NAME: [db_name]
+    - DATABASE_USERNAME: [db_user]
+    - DATABASE_PASSWORD: [db_name]
+    - WEBSITES_CONTAINER_START_TIME_LIMIT: 1200
+    - WEBSITES_ENABLE_APP_SERVICE_STORAGE: True
+4. trigger web app, It will connect to DB automatically.
 
 ## How to configure to use Local Database with web app 
 1. Create a Web App for Containers 
@@ -161,7 +174,7 @@ composer require drupal/adminimal_theme
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 1800, suggest to set it as 900 when using this version.
 
 ## Change Log
-- **Version 0.6**
+- **Version 0.51**
   1. Added [fluent-plugin-azure-loganalytics](https://github.com/yokawasa/fluent-plugin-azure-loganalytics) for centralized logging via OMS (instead of [OMS Agent for Linux](https://github.com/Microsoft/OMS-Agent-for-Linux) which is [not compatible with Alpine Linux's apk](https://github.com/Microsoft/OMS-Agent-for-Linux#supported-linux-operating-systems)).
   2. Added MIME type declarations for common webfonts in nginx.conf.
   3. Added [phpredis](https://github.com/phpredis/phpredis) extension.
