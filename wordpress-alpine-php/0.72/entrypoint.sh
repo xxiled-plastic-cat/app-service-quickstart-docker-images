@@ -3,6 +3,9 @@
 # set -e
 
 php -v
+
+AZURE_DETECTED=$WEBSITES_ENABLE_APP_SERVICE_STORAGE # if defined, assume the container is running on Azure
+
 setup_mariadb_data_dir(){
     test ! -d "$MARIADB_DATA_DIR" && echo "INFO: $MARIADB_DATA_DIR not found. creating ..." && mkdir -p "$MARIADB_DATA_DIR"
 
@@ -57,18 +60,20 @@ setup_phpmyadmin(){
     cp -R phpmyadmin-default.conf /etc/nginx/conf.d/default.conf
 	cd /
     rm -rf $PHPMYADMIN_SOURCE
-    if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
+    if [ ! $AZURE_DETECTED ]; then
         echo "INFO: NOT in Azure, chown for "$PHPMYADMIN_HOME  
         chown -R www-data:www-data $PHPMYADMIN_HOME
     fi 
 }    
 
 setup_wordpress(){
-	test ! -d "$WORDPRESS_HOME" && echo "INFO: $WORDPRESS_HOME not found. creating ..." && mkdir -p "$WORDPRESS_HOME"
-	cd $WORDPRESS_HOME
-    if ! [ -e wp-includes/version.php ]; then
+	if ! [ -e wp-includes/version.php ]; then
         echo "INFO: There in no wordpress, going to GIT pull...:"
-        rm -rf * .*
+        while [ -d $WORDPRESS_HOME ]
+        do
+            mkdir -p /home/bak
+            mv $WORDPRESS_HOME /home/bak/wordpress_bak$(date +%s)            
+        done
         GIT_REPO=${GIT_REPO:-https://github.com/azureappserviceoss/wordpress-azure}
 	    GIT_BRANCH=${GIT_BRANCH:-linux-appservice}
 	    echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
@@ -101,23 +106,6 @@ update_localdb_config(){
 	DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
     export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD   
 }
-
-# show_wordpress_db_config(){
-#     echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
-#     echo "INFO: WORDPRESS_ENVS:"
-#     echo "INFO: DATABASE_HOST:" $DATABASE_HOST
-#     echo "INFO: WORDPRESS_DATABASE_NAME:" $DATABASE_NAME
-#     echo "INFO: WORDPRESS_DATABASE_USERNAME:" $DATABASE_USERNAME
-#     echo "INFO: WORDPRESS_DATABASE_PASSWORD:" $DATABASE_PASSWORD	        
-#     echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
-# }
-
-# setup server root
-test ! -d "$WORDPRESS_HOME" && echo "INFO: $WORDPRESS_HOME not found. creating..." && mkdir -p "$WORDPRESS_HOME"
-if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
-    echo "INFO: NOT in Azure, chown for "$WORDPRESS_HOME 
-    chown -R www-data:www-data $WORDPRESS_HOME
-fi
 
 echo "Setup openrc ..." && openrc && touch /run/openrc/softlevel
 
@@ -163,7 +151,7 @@ if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
 	echo "Installing WordPress for the first time ..." 
 	setup_wordpress
     chmod 777 $WORDPRESS_SOURCE/wp-config.php
-	if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
+	if [ ! $AZURE_DETECTED ]; then 
        echo "INFO: NOT in Azure, chown for wp-config.php"
        chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
     fi    
@@ -189,12 +177,18 @@ else
     fi
 fi
 
+# setup server root
+if [ ! $AZURE_DETECTED ]; then 
+    echo "INFO: NOT in Azure, chown for "$WORDPRESS_HOME 
+    chown -R www-data:www-data $WORDPRESS_HOME
+fi
+
 echo "Starting Redis ..."
 redis-server &
 
-if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
-    echo "NOT in AZURE, Start crond, log rotate..."
-    crond
+if [ ! $AZURE_DETECTED ]; then	
+    echo "NOT in AZURE, Start crond, log rotate..."	
+    crond	
 fi 
 
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
