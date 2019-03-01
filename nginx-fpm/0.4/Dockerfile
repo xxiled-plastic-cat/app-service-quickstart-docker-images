@@ -1,10 +1,11 @@
-FROM php:7.2-fpm-alpine
+FROM php:7.2.7-fpm-alpine3.7
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
 # ========
 # ssh
 ENV SSH_PASSWD "root:Docker!"
+ENV SSH_PORT 2222
 #nginx
 ENV NGINX_VERSION 1.14.0
 ENV NGINX_LOG_DIR "/home/LogFiles/nginx"

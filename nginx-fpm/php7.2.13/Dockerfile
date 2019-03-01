@@ -5,6 +5,7 @@ MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ssh
 ENV SSH_PASSWD "root:Docker!"
+ENV SSH_PORT 2222
 #nginx
 ENV NGINX_VERSION 1.14.0
 ENV NGINX_LOG_DIR "/home/LogFiles/nginx"
