@@ -8,9 +8,9 @@ This repository contains docker images that are used for App Service Linux. Some
 ## Components
 This docker image currently contains the following components:
 
-1. Nginx (1.14.2)   
-2. PHP (7.3.1) 
-3. MariaDB ( 10.1.26/if using Local Database )
+1. Nginx (1.15.8)   
+2. PHP (7.3.2) 
+3. MariaDB ( 10.1.38/if using Local Database )
 4. Phpmyadmin ( 4.8.4/if using Local Database )
 
 # How to Deploy to Azure 
@@ -63,6 +63,11 @@ php-fpm -D && chmod 777 /run/php/php-fpm.sock
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version php7.3.2** 
+  1. Upgrade version of alpine to 3.9.
+  2. Upgrade version of php to 7.3.2.
+  3. Upgrade version of nginx to 1.15.8.
+  4. Upgrade version of mariadb to 10.1.38.  
 - **Version php7.3.1** 
   1. Upgrade version of php to 7.3.1.
   2. Upgrade nginx version to 1.14.2.  

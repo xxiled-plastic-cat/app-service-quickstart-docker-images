@@ -23,10 +23,10 @@ setup_mariadb_data_dir(){
 }
 
 start_mariadb(){
-    if test ! -e /run/mysqld/mysqld.sock; then 
-        touch /run/mysqld/mysqld.sock
-    fi
-    chmod 777 /run/mysqld/mysqld.sock
+    # if test ! -e /run/mysqld/mysqld.sock; then 
+    #     touch /run/mysqld/mysqld.sock
+    # fi
+    # chmod 777 /run/mysqld/mysqld.sock
     mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
     /usr/bin/mysqld --user=mysql &
     # make sure mysql service is started...
@@ -47,7 +47,7 @@ start_mariadb(){
             process=`ps -ef |grep mysql|grep -v grep |wc -l`    
         fi
     done    
-}
+    }
 #unzip phpmyadmin
 setup_phpmyadmin(){
     test ! -d "$PHPMYADMIN_HOME" && echo "INFO: $PHPMYADMIN_HOME not found. creating..." && mkdir -p "$PHPMYADMIN_HOME"
