@@ -82,7 +82,7 @@ setup_wordpress(){
 	    echo "INFO: ++++++++++++++++++++++++++++++++++++++++++++++++++:"
     
 	    echo "INFO: Clone from "$GIT_REPO		
-        git clone $GIT_REPO $WORDPRESS_HOME	
+        git clone $GIT_REPO $WORDPRESS_HOME	&& cd $WORDPRESS_HOME
 	    if [ "$GIT_BRANCH" != "master" ];then
 		    echo "INFO: Checkout to "$GIT_BRANCH
 		    git fetch origin
@@ -204,6 +204,7 @@ touch /run/php/php7.0-fpm.sock
 chown www-data:www-data /run/php/php7.0-fpm.sock
 chmod 777 /run/php/php7.0-fpm.sock
 
+sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config
 echo "Starting SSH ..."
 echo "Starting php-fpm ..."
 echo "Starting Nginx ..."

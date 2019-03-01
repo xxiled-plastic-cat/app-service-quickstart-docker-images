@@ -8,6 +8,7 @@ MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ssh
 ENV SSH_PASSWD "root:Docker!"
+ENV SSH_PORT 2222
 #nginx
 ENV NGINX_VERSION 1.14.0
 ENV NGINX_LOG_DIR "/home/LogFiles/nginx"
@@ -30,6 +31,8 @@ ENV WORDPRESS_HOME "/home/site/wwwroot"
 ENV DOCKER_BUILD_HOME "/dockerbuild"
 # ====================
 # ====================
+# ssh
+COPY sshd_config /etc/ssh/ 
 # wordpress
 COPY wp-config.php $WORDPRESS_SOURCE/
 COPY ssl-settings.txt $WORDPRESS_SOURCE/
