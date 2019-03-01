@@ -23,40 +23,6 @@ This docker image currently contains the following components:
 3. Browse your site and wait almost 10 mins, you will see install page of Drupal.
 4. Complete Drupal install.
 
-### How to connect external data resources, e.g., Azure Database for MySQL & Azure Redis Cache
-
-Connecting other Azure services to your Web App is easy.  The following services are commonly used with Drupal:
-
-  * Database for MySQL
-  * OMS Log Analytics
-  * Redis Cache
-
-To connect an external service:
-1. Create the resource in Azure
-1. Add credentials/keys in App Settings for your Web App for Containers instance.  E.g., 
-  * MYSQL_DATABASE=my_db_database
-  * MYSQL_HOST=my_db_host
-  * MYSQL_USERNAME=my_db_user
-  * MYSQL_PASSWORD=my_db_password
-  * MYSQL_PORT=3306
-  * REDIS_HOST=my_redis_host
-  * REDIS_PORT=6379
-  * REDIS_PASSWORD=my_redis_password
-  * OMSWORKSPACE_ID=my_oms_workspace_id
-  * OMSWORKSPACE_PRIMARY_KEY=my_oms_workspace_primary_key
-1. Access the App Settings as environment variable in your settings.php file (or elsewhere as needed).  For example, the MYSQL_DATABASE environment variable can be accessed from within PHP via the `getenv` command, such as `$mysql_db = getenv('APPSETTINGS_MYSQL_DATABASE');`.
-
-#### Using the fluentd plugin for Azure Log Analytics
-
-OMS Log Analytics can be used to conveniently centralize logs across all container instances. This image includes a default configuration for fluentd that will capture the nginx access and error logs.
-
-To use the default configuration, just add the following App Settings to your Web App:
-
-  * OMSWORKSPACE_ID=my_oms_workspace_id
-  * OMSWORKSPACE_PRIMARY_KEY=my_oms_workspace_primary_key
-
-When the environment variable `APPSETTING_OMSWORKSPACE_ID` is detected, entrypoint.sh will add the default fluentd configuration to the services managed by supervisord.
-
 ## How to configure GIT Repo and Branch
 1. Create a Web App for Containers
 2. Add new App Settings
@@ -74,21 +40,44 @@ GIT_BRANCH | master
 >
 >Note: ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true, and /home/site/wwwroot/sites/default/settings.php is exist, it will not pull again after restart.
 
-## Best practice to use External Database, such as Azure Database for MySQL.
-1. Create a Azure Database for MySQL, create a DB.  [Reference]( https://docs.microsoft.com/en-us/azure/mysql/)
+## How to connect external data resources, e.g., Azure Database for MySQL / Azure Redis Cache / Log Analytics
+
+Connecting other Azure services to your Web App is easy.  The following services are commonly used with Drupal:
+
+  * [Azure Database for MySQL](https://docs.microsoft.com/en-us/azure/mysql/) - (see [best practices section](#best-practices-for-azure-database-for-mysql) below)
+  * [Azure Cache for Redis](https://azure.microsoft.com/en-us/services/cache/)
+  * Azure Monitor [Log Analytics](https://docs.microsoft.com/en-us/azure/azure-monitor/learn/tutorial-viewdata)
+
+To connect an external service:
+1. Create the resources in Azure
+1. Add credentials/keys in App Settings for your Web App for Containers instance.  E.g., 
+    * DATABASE_HOST: [db_host]
+    * DATABASE_NAME: [db_name]
+    * DATABASE_USERNAME: [db_user]
+    * DATABASE_PASSWORD: [db_name]
+    * REDIS_HOST: [redis_host]
+    * REDIS_PORT: 6379
+    * REDIS_PASSWORD: [redis_password]
+    * OMSWORKSPACE_ID: [oms_workspace_id]
+    * OMSWORKSPACE_PRIMARY_KEY: [oms_workspace_primary_key]
+1. These App Settings can be accessed as environment variables from `settings.php` (or elsewhere as needed). For example, DATABASE_NAME can be accessed from within PHP via the `getenv` command, such as in `$mysql_db = getenv('APPSETTINGS_DATABASE_NAME');`.
+
+### Best practices for Azure Database for MySQL
+1. Create a Azure Database for MySQL, create a DB ([Reference]( https://docs.microsoft.com/en-us/azure/mysql/)).
+1. Check the following settings in the Azure Database for MySQL instance:
     - SSL enforce status: DISABLED
     - Update Connection security, edit Firewall rules, add allow IP list.
-2. Create a "web app for container", set docker image as this one.
-3. Before trigger web app, add below app settings:
+1. Add the app settings below to your web app:
     - DATABASE_HOST: [db_host]
     - DATABASE_NAME: [db_name]
     - DATABASE_USERNAME: [db_user]
     - DATABASE_PASSWORD: [db_name]
     - WEBSITES_CONTAINER_START_TIME_LIMIT: 1200
     - WEBSITES_ENABLE_APP_SERVICE_STORAGE: True
-4. trigger web app, It will connect to DB automatically.
 
-## How to configure to use Local Database with web app 
+Now Drupal should successfully connect to the database instance.
+
+### How to configure to use Local Database with web app 
 1. Create a Web App for Containers 
 2. Update App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true
 3. Add new App Settings 
@@ -102,6 +91,17 @@ DATABASE_PASSWORD | some-string
 >Note: We create a database "azurelocaldb" when using local mysql. Hence use this name when setting up the app.
 
 4. Browse http://[website]/phpmyadmin
+
+### Using the fluentd plugin for Azure Log Analytics
+
+OMS Log Analytics can be used to conveniently centralize logs across all container instances. This image includes a default configuration for fluentd that will capture the nginx access and error logs.
+
+To use the default configuration, just add the following App Settings to your Web App:
+
+  * OMSWORKSPACE_ID=my_oms_workspace_id
+  * OMSWORKSPACE_PRIMARY_KEY=my_oms_workspace_primary_key
+
+When the environment variable `APPSETTING_OMSWORKSPACE_ID` is detected, entrypoint.sh will add the default fluentd configuration to the services managed by supervisord.
 
 # How to turn on Xdebug to profile the app
 1. By default Xdebug is turned off as turning it on impacts performance.
