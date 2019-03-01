@@ -4,6 +4,9 @@ LABEL maintainer ="Azure App Service Container Images <appsvc-images@microsoft.c
 # ENV vars
 # ========
 #
+# ssh 
+ENV SSH_PORT 2222
+#
 ENV DOCKER_BUILD_HOME "/dockerbuild"
 # drupal 
 ENV DRUPAL_HOME "/home/site/wwwroot"
@@ -53,6 +56,8 @@ RUN set -ex \
 # =========
 WORKDIR $DRUPAL_HOME
 RUN rm -rf $DOCKER_BUILD_HOME
+# ssh
+COPY sshd_config /etc/ssh/ 
 # nginx
 COPY spec-settings.conf /etc/nginx/conf.d/spec-settings.conf
 COPY nginx.conf /etc/nginx/nginx.conf
