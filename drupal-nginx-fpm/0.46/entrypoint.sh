@@ -24,7 +24,7 @@ setup_mariadb_data_dir(){
 }
 
 start_mariadb(){
-    /etc/init.d/mariadb setup
+    mysql_install_db --user=mysql --basedir=/usr --datadir=/var/lib/mysql
     rc-service mariadb restart
 
     rm -f /tmp/mysql.sock
@@ -211,7 +211,8 @@ fi
 
 
 cd $DRUPAL_HOME
-       
+
+sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config       
 echo "Starting SSH ..."
 rc-service sshd start
 
