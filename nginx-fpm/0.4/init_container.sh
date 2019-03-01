@@ -94,7 +94,9 @@ if [ "${DATABASE_TYPE}" == "local" ]; then
     mysql -u root -e "GRANT ALL ON *.* TO \`$DATABASE_USERNAME\`@'localhost' IDENTIFIED BY '$DATABASE_PASSWORD' WITH GRANT OPTION; FLUSH PRIVILEGES;"
     echo "Installing phpMyAdmin ..."
     setup_phpmyadmin
-fi        
+fi
+
+sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config
 echo "Starting SSH ..."
 rc-service sshd start
 
