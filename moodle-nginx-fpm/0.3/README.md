@@ -67,9 +67,9 @@ http://[website]/phpmyadmin, and login with DATABASE_USERNAME and DATABASE_PASSW
 # find gid of php-fpm
 ps aux
 # Kill master process of php-fpm
-killall -9 php-fpm
-# start php-fpm again
-php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
+kill -INT <gid>
+# start php-fpm again, no need for this image, it will be restarted by supervisor.
+# php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
 ```
 5. Xdebug is turned on.
 
