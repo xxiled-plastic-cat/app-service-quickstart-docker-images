@@ -26,7 +26,7 @@ setup_mariadb_data_dir(){
 }
 
 start_mariadb(){
-    if test ! -e /run/mysqld/mysqld.sock; then 
+    if test ! -e /run/mysqld/mysqld.sock; then
         touch /run/mysqld/mysqld.sock
     fi
     chmod 777 /run/mysqld/mysqld.sock
@@ -57,9 +57,9 @@ setup_phpmyadmin(){
     cd $PHPMYADMIN_SOURCE
     tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME --strip-components=1
     cp -R phpmyadmin-config.inc.php $PHPMYADMIN_HOME/config.inc.php    
-    cp -R phpmyadmin-default.conf /etc/nginx/conf.d/default.conf
+    sed -i "/# Add locations of phpmyadmin here./r $PHPMYADMIN_SOURCE/phpmyadmin-locations.txt" /etc/nginx/conf.d/default.conf
 	cd /
-    rm -rf $PHPMYADMIN_SOURCE
+    # rm -rf $PHPMYADMIN_SOURCE
     if [ ! $AZURE_DETECTED ]; then
         echo "INFO: NOT in Azure, chown for "$PHPMYADMIN_HOME  
         chown -R www-data:www-data $PHPMYADMIN_HOME
@@ -99,11 +99,12 @@ setup_wordpress(){
 update_localdb_config(){    
 	DATABASE_HOST=${DATABASE_HOST:-127.0.0.1}
 	DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}
+    # DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
 	# if DATABASE_USERNAME equal phpmyadmin, it means it's nothing at beginning.
-	if [ "${DATABASE_USERNAME}" == "phpmyadmin" ]; then
-	    DATABASE_USERNAME='wordpress'
-	fi	
-	DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
+	# if [ "${DATABASE_USERNAME}" == "phpmyadmin" ]; then
+	#    DATABASE_USERNAME='wordpress'
+	# fi	
+	# DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
     export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD   
 }
 
@@ -150,31 +151,43 @@ if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
 	echo "INFO: $WORDPRESS_HOME/wp-config.php not found."    
 	echo "Installing WordPress for the first time ..." 
 	setup_wordpress
-    chmod 777 $WORDPRESS_SOURCE/wp-config.php
-	if [ ! $AZURE_DETECTED ]; then 
-       echo "INFO: NOT in Azure, chown for wp-config.php"
-       chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
-    fi    
-	if [ "${DATABASE_TYPE}" == "local" ]; then        
-        cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
-	else
-        if [ $DATABASE_HOST ]; then
-            echo "INFO: External Mysql is used."                
-            # show_wordpress_db_config
-            cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/
-        fi        
-	fi   
+fi
+
+chmod 777 $WORDPRESS_SOURCE/wp-config.php
+if [ ! $AZURE_DETECTED ]; then 
+    echo "INFO: NOT in Azure, chown for wp-config.php"
+    chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
+fi
+
+#IF App settings of DB are exist, Use Special wp-config file.    
+if [ "${DATABASE_TYPE}" == "local" ]; then        
+    cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/        
 else
-	echo "INFO: $WORDPRESS_HOME/wp-config.php already exists."
-    # 'localhost' isn't acceptable since 0.7X.
-    sed -i "s/'localhost'/'127.0.0.1'/g" $WORDPRESS_HOME/wp-config.php
+    if [ $DATABASE_HOST ]; then
+        echo "INFO: External Mysql is used."                
+        # show_wordpress_db_config
+        cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/            
+    fi        
+fi 
+
+if [  -e "$WORDPRESS_HOME/wp-config.php" ]; then
     echo "INFO: Check SSL Setting..."    
-    if [ -z $(grep "\$_SERVER\['HTTPS'\] = 'on';" $WORDPRESS_HOME/wp-config.php) ];then
+    SSL_DETECTED=$(grep "\$_SERVER\['HTTPS'\] = 'on';" $WORDPRESS_HOME/wp-config.php)
+    if [ ! SSL_DETECTED ];then
         echo "INFO: Add SSL Setting..."
         sed -i "/stop editing!/r $WORDPRESS_SOURCE/ssl-settings.txt" $WORDPRESS_HOME/wp-config.php        
     else        
         echo "INFO: SSL Setting is exist!"
     fi
+fi
+
+# set permalink as 'Day and Name' and default, it has best performance with nginx re_write config.
+PERMALINK_DETECTED=$(grep "\$wp_rewrite->set_permalink_structure" $WORDPRESS_HOME/wp-settings.php)
+if [ ! $PERMALINK_DETECTED ];then
+    echo "INFO: Set Permalink..."
+    sed -i "/do_action( 'init' );/r $WORDPRESS_SOURCE/permalink-settings.txt" $WORDPRESS_HOME/wp-settings.php
+else
+    echo "INFO: Permalink setting is exist!"
 fi
 
 # setup server root
@@ -191,11 +204,25 @@ if [ ! $AZURE_DETECTED ]; then
     crond	
 fi 
 
+# export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD
+# export SSH_PORT NGINX_LOG_DIR  
+# export MARIADB_DATA_DIR MARIADB_LOG_DIR
+# export PHPMYADMIN_SOURCE PHPMYADMIN_HOME
+# export WORDPRESS_SOURCE WORDPRESS_HOME
+
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
 test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
 test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
+
+#Just In Case, use external DB before, change to Local DB this time.
+if [ "$DATABASE_TYPE" == "local" ]; then
+    PHPMYADMIN_SETTINGS_DETECTED=$(grep "location /phpmyadmin" /etc/nginx/conf.d/default.conf )
+    if [ ! $PHPMYADMIN_SETTINGS_DETECTED ]; then
+        sed -i "/# Add locations of phpmyadmin here./r $PHPMYADMIN_SOURCE/phpmyadmin-locations.txt" /etc/nginx/conf.d/default.conf
+    fi
+fi
 
 echo "INFO: creating /run/php/php7.0-fpm.sock ..."
 test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock

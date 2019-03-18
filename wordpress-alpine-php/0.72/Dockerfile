@@ -35,13 +35,17 @@ ENV DOCKER_BUILD_HOME "/dockerbuild"
 COPY sshd_config /etc/ssh/ 
 # wordpress
 COPY wp-config.php $WORDPRESS_SOURCE/
+COPY permalink-settings.txt $WORDPRESS_SOURCE/
 COPY ssl-settings.txt $WORDPRESS_SOURCE/
 # supervisor
 COPY supervisord.conf /etc/
 # php
-# COPY php.ini /usr/local/etc/php/php.ini
 COPY www.conf /usr/local/etc/php/conf.d/
 COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
+#
+# nginx
+COPY default.conf /etc/nginx/conf.d/default.conf
+COPY phpmyadmin-locations.txt ${PHPMYADMIN_SOURCE}/phpmyadmin-locations.txt
 #
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
