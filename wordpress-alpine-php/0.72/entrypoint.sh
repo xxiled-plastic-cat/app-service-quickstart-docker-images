@@ -98,13 +98,7 @@ setup_wordpress(){
 
 update_localdb_config(){    
 	DATABASE_HOST=${DATABASE_HOST:-127.0.0.1}
-	DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}
-    # DATABASE_USERNAME=${DATABASE_USERNAME:-phpmyadmin}
-	# if DATABASE_USERNAME equal phpmyadmin, it means it's nothing at beginning.
-	# if [ "${DATABASE_USERNAME}" == "phpmyadmin" ]; then
-	#    DATABASE_USERNAME='wordpress'
-	# fi	
-	# DATABASE_PASSWORD=${DATABASE_PASSWORD:-MS173m_QN}
+	DATABASE_NAME=${DATABASE_NAME:-azurelocaldb}    
     export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD   
 }
 
@@ -204,12 +198,6 @@ if [ ! $AZURE_DETECTED ]; then
     crond	
 fi 
 
-# export DATABASE_HOST DATABASE_NAME DATABASE_USERNAME DATABASE_PASSWORD
-# export SSH_PORT NGINX_LOG_DIR  
-# export MARIADB_DATA_DIR MARIADB_LOG_DIR
-# export PHPMYADMIN_SOURCE PHPMYADMIN_HOME
-# export WORDPRESS_SOURCE WORDPRESS_HOME
-
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
@@ -218,8 +206,8 @@ test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/ngin
 
 #Just In Case, use external DB before, change to Local DB this time.
 if [ "$DATABASE_TYPE" == "local" ]; then
-    PHPMYADMIN_SETTINGS_DETECTED=$(grep "location /phpmyadmin" /etc/nginx/conf.d/default.conf )
-    if [ ! $PHPMYADMIN_SETTINGS_DETECTED ]; then
+    PHPMYADMIN_SETTINGS_DETECTED=$(grep 'location /phpmyadmin' /etc/nginx/conf.d/default.conf )    
+    if [ ! "$PHPMYADMIN_SETTINGS_DETECTED" ]; then
         sed -i "/# Add locations of phpmyadmin here./r $PHPMYADMIN_SOURCE/phpmyadmin-locations.txt" /etc/nginx/conf.d/default.conf
     fi
 fi

@@ -42,8 +42,8 @@ COPY supervisord.conf /etc/
 # php
 COPY www.conf /usr/local/etc/php/conf.d/
 COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
-#
 # nginx
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf /etc/nginx/conf.d/default.conf
 COPY phpmyadmin-locations.txt ${PHPMYADMIN_SOURCE}/phpmyadmin-locations.txt
 #
