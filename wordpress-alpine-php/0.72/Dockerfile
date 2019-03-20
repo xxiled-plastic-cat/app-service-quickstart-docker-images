@@ -40,6 +40,7 @@ COPY ssl-settings.txt $WORDPRESS_SOURCE/
 # supervisor
 COPY supervisord.conf /etc/
 # php
+COPY php.ini /usr/local/etc/php/php.ini
 COPY www.conf /usr/local/etc/php/conf.d/
 COPY zz-docker.conf /usr/local/etc/php-fpm.d/zz-docker.conf
 # nginx
