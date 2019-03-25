@@ -179,7 +179,10 @@ fi
 PERMALINK_DETECTED=$(grep "\$wp_rewrite->set_permalink_structure" $WORDPRESS_HOME/wp-settings.php)
 if [ ! $PERMALINK_DETECTED ];then
     echo "INFO: Set Permalink..."
-    sed -i "/do_action( 'init' );/r $WORDPRESS_SOURCE/permalink-settings.txt" $WORDPRESS_HOME/wp-settings.php
+    init_string="do_action( 'init' );"
+    sed -i "/$init_string/r $WORDPRESS_SOURCE/permalink-settings.txt" $WORDPRESS_HOME/wp-settings.php
+    init_row=$(grep "$init_string" -n $WORDPRESS_HOME/wp-settings.php | head -n 1 | cut -d ":" -f1)
+    sed -i "${init_row}d" $WORDPRESS_HOME/wp-settings.php
 else
     echo "INFO: Permalink setting is exist!"
 fi
