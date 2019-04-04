@@ -87,13 +87,30 @@ setup_wordpress(){
 		    echo "INFO: Checkout to "$GIT_BRANCH
 		    git fetch origin
 	        git branch --track $GIT_BRANCH origin/$GIT_BRANCH && git checkout $GIT_BRANCH
-	    fi	        
+	    fi
+
+        chmod 777 $WORDPRESS_SOURCE/wp-config.php
+        if [ ! $AZURE_DETECTED ]; then 
+            echo "INFO: NOT in Azure, chown for wp-config.php"
+            chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
+        fi
+
+        #IF App settings of DB are exist, Use Special wp-config file.    
+        if [ "${DATABASE_TYPE}" == "local" ]; then        
+            cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/ && chmod 777 $WORDPRESS_HOME/wp-config.php       
+        else
+            if [ $DATABASE_HOST ]; then
+                echo "INFO: External Mysql is used."                
+                # show_wordpress_db_config
+                cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/ && chmod 777 $WORDPRESS_HOME/wp-config.php            
+            fi        
+        fi	        
     else
         echo "INFO: There is one wordpress exist, no need to GIT pull again."
     fi
 	
 	# Although in AZURE, we still need below chown cmd.
-    chown -R www-data:www-data $WORDPRESS_HOME    
+    chown -R www-data:www-data $WORDPRESS_HOME
 }
 
 update_localdb_config(){    
@@ -146,23 +163,6 @@ if [ ! -e "$WORDPRESS_HOME/wp-config.php" ]; then
 	echo "Installing WordPress for the first time ..." 
 	setup_wordpress
 fi
-
-chmod 777 $WORDPRESS_SOURCE/wp-config.php
-if [ ! $AZURE_DETECTED ]; then 
-    echo "INFO: NOT in Azure, chown for wp-config.php"
-    chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
-fi
-
-#IF App settings of DB are exist, Use Special wp-config file.    
-if [ "${DATABASE_TYPE}" == "local" ]; then        
-    cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/ && chmod 777 $WORDPRESS_HOME/wp-config.php       
-else
-    if [ $DATABASE_HOST ]; then
-        echo "INFO: External Mysql is used."                
-        # show_wordpress_db_config
-        cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/ && chmod 777 $WORDPRESS_HOME/wp-config.php            
-    fi        
-fi 
 
 if [  -e "$WORDPRESS_HOME/wp-config.php" ]; then
     echo "INFO: Check SSL Setting..."    
