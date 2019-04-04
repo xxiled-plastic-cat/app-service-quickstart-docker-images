@@ -155,12 +155,12 @@ fi
 
 #IF App settings of DB are exist, Use Special wp-config file.    
 if [ "${DATABASE_TYPE}" == "local" ]; then        
-    cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/        
+    cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/ && chmod 777 $WORDPRESS_HOME/wp-config.php       
 else
     if [ $DATABASE_HOST ]; then
         echo "INFO: External Mysql is used."                
         # show_wordpress_db_config
-        cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/            
+        cp $WORDPRESS_SOURCE/wp-config.php $WORDPRESS_HOME/ && chmod 777 $WORDPRESS_HOME/wp-config.php            
     fi        
 fi 
 
