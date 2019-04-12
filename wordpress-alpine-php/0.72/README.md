@@ -122,7 +122,7 @@ There is a tradeoff between file server stability and file persistence . Since w
 - Some unexpected issues may happen after you scale out your site to multiple instances, if you deploy a WordPress site on Azure with this docker image and use the MariaDB built in this docker image as the database.
 - The phpMyAdmin built in this docker image is available only when you use the MariaDB built in this docker image as the database.
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
-- Set permalink as "Day and Name" by default. Peformance issue may happen with customized permalink. If like to use customized permalink, need to modify nginx configuration and remove lines of set_permalink() in wp-settings.php.
+- Performance issue may happen with customized permalink. Please double check permalink settings if meet performance issue. It sets abnormal customized permalink sometimes during deploy to West Europe.
 
 ## Change Log
 
