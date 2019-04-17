@@ -119,10 +119,6 @@ php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
 ```
 5. Xdebug is turned on.
 
-# Choose Listen Type of php-fpm/nginx
-1. By default, ```LISTEN_TYPE``` = socket.
-2. Update App Setting ```LISTEN_TYPE``` = port if you perfer to listening from TCP/IP.
-
 ## How to update config files of nginx
 1. Go to "/etc/nginx", update config files as your wish. 
 2. Reload by below cmd: 
