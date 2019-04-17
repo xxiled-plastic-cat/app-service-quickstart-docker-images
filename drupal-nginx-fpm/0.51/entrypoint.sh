@@ -218,28 +218,6 @@ else
     fi
 fi
 
-# Set php-fpm listen type
-# By default, It's socket.
-# LISTEN_TYPE==port, It's port.
-LISTEN_TYPE=${LISTEN_TYPE:-socket}
-LISTEN_TYPE=$(echo ${LISTEN_TYPE}|tr '[A-Z]' '[a-z]')
-if [ "${LISTEN_TYPE}" == "socket" ]; then  
-    echo "INFO: creating /run/php/php7.0-fpm.sock ..."
-    test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
-    mkdir -p /run/php
-    touch /run/php/php7.0-fpm.sock
-    chown www-data:www-data /run/php/php7.0-fpm.sock
-    chmod 777 /run/php/php7.0-fpm.sock
-else
-    echo "INFO: PHP-FPM listener is 127.0.0.1:9000 ..."    
-    #/etc/nginx/conf.d/default.conf
-    sed -i "s/unix:\/var\/run\/php\/php7.0-fpm.sock/127.0.0.1:9000/g" /etc/nginx/conf.d/default.conf
-    #/usr/local/etc/php/conf.d/www.conf
-    sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/127.0.0.1:9000/g" /usr/local/etc/php/conf.d/www.conf
-    #/usr/local/etc/php-fpm.d/zz-docker.conf 
-    sed -i "s/\/var\/run\/php\/php7.0-fpm.sock/9000/g" /usr/local/etc/php-fpm.d/zz-docker.conf 
-fi
-
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
     echo "NOT in AZURE, Start crond, log rotate..."
     crond

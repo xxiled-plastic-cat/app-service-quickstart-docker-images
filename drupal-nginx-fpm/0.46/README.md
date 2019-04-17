@@ -73,10 +73,6 @@ chmod 777 /run/php/php7.0-fpm.sock
 ```
 5. Xdebug is turned on.
 
-# Choose Listen Type of php-fpm/nginx
-1. By default, ```LISTEN_TYPE``` = socket.
-2. Update App Setting ```LISTEN_TYPE``` = port if you perfer to listening from TCP/IP.
-
 # Updating Drupal version , themes , files 
 
 If ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = false  ( which is the default setting ), we recommend you DO NOT update the Drupal core version, themes or files.
