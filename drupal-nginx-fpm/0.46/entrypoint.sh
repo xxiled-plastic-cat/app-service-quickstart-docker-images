@@ -201,11 +201,12 @@ chmod 666 $NGINX_LOG_DIR/php-error.log;
 test ! -d "/usr/local/php/tmp" && echo "INFO: Session folder for php not found. creating..." && mkdir -p "/usr/local/php/tmp"
 chmod 777 /usr/local/php/tmp
 
+echo "INFO: creating /run/php/php7.0-fpm.sock ..."
+test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
+mkdir -p /run/php && touch /run/php/php7.0-fpm.sock && chown www-data:www-data /run/php/php7.0-fpm.sock && chmod 777 /run/php/php7.0-fpm.sock
+
 echo "Starting php-fpm ..."
 php-fpm -D
-if [ "${LISTEN_TYPE}" == "socket" ]; then  
-    chmod 777 /run/php/php7.0-fpm.sock
-fi
 
 test ! -d "$VARNISH_LOG_DIR" && echo "INFO: Log folder for varnish found. creating..." && mkdir -p "$VARNISH_LOG_DIR"
 echo "Starting Varnishd ..."
