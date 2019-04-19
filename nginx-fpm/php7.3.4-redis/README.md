@@ -9,7 +9,7 @@ This repository contains docker images that are used for App Service Linux. Some
 This docker image currently contains the following components:
 
 1. Nginx (1.15.8)   
-2. PHP (7.3.2) 
+2. PHP (7.3.4) 
 3. MariaDB ( 10.1.38/if using Local Database )
 4. Phpmyadmin ( 4.8.4/if using Local Database )
 
@@ -63,6 +63,13 @@ php-fpm -D && chmod 777 /run/php/php-fpm.sock
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
+- **Version php7.3.4-redis** 
+  1. Base on php7.3.4.
+  2. Add local Redis server.
+  3. Add php redis extension. 
+- **Version php7.3.4** 
+  1. Upgrade version of php to 7.3.2.
+  2. Include ngx_cache_purge module.
 - **Version php7.3.2-redis** 
   1. Base on php7.3.2.
   2. Add local Redis server.

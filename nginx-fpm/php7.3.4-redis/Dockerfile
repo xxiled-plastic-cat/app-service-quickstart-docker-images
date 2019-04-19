@@ -1,5 +1,5 @@
 
-FROM appsvcorg/nginx-fpm:php7.3.2
+FROM appsvcorg/nginx-fpm:php7.3.4
 MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com>
 # ========
 # ENV vars
