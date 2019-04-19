@@ -63,7 +63,10 @@ php-fpm -D && chmod 777 /run/php/php-fpm.sock
 - Must include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  since we need files to be persisted.
 
 ## Change Log
-- **Version php7.3.2** 
+- **Version php7.3.4** 
+  1. Upgrade version of php to 7.3.2.
+  2. Include ngx_cache_purge module.
+  - **Version php7.3.2** 
   1. Upgrade version of alpine to 3.9.
   2. Upgrade version of php to 7.3.2.
   3. Upgrade version of nginx to 1.15.8.
