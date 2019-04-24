@@ -415,6 +415,7 @@ COPY sshd_config /etc/ssh/
 COPY php.ini /usr/local/etc/php/php.ini
 COPY php_conf/. /usr/local/etc/php/conf.d/
 COPY php_fpm_conf/. /usr/local/etc/php-fpm.d/
+COPY php-fpm.conf /usr/local/etc/
 # nginx
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx_conf/. /etc/nginx/conf.d/
