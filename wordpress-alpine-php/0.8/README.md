@@ -5,9 +5,9 @@ This is a WordPress Docker image which can run on both [Azure Web App on Linux](
 This docker image currently contains the following components:
 
 1. WordPress
-2. Nginx(1.14.0)
-3. PHP (7.2.13)
-4. MariaDB ( 10.1.26/if using Local Database )
+2. Nginx (1.15.8)
+3. PHP (7.3.4) 
+4. MariaDB ( 10.1.38/if using Local Database )
 5. Phpmyadmin ( 4.8.4/if using Local Database )
 
 ## How to configure to use Azure Database for MySQL with web app 
@@ -118,8 +118,25 @@ There is a tradeoff between file server stability and file persistence . Since w
 - Some unexpected issues may happen after you scale out your site to multiple instances, if you deploy a WordPress site on Azure with this docker image and use the MariaDB built in this docker image as the database.
 - The phpMyAdmin built in this docker image is available only when you use the MariaDB built in this docker image as the database.
 - Please Include  App Setting ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  when use built in MariaDB since we need files to be persisted.
+- Set permalink as "Day and Name" by default. Peformance issue may happen with customized permalink. If like to use customized permalink, need to modify nginx configuration and remove lines of set_permalink() in wp-settings.php.
 
 ## Change Log
+
+- **Version 0.8**
+  1. Upgrade php-fpm and nginx.
+  2. Upgrade local mariadb.
+  3. Update conf of php-fpm.
+  4. Add Watch thread of php-fpm, kill STAT D child threads.
+
+- **Version 0.72**
+  1. Fix Permission denied of log files issue of supervisord.
+
+- **Version 0.71**
+  1. Upgrade php-fpm.
+  2. Upgrade phpmyadmin.
+  3. Add function log rotate. (It's disabed if deploy to web app of azure by default.)
+  4. Php-fpm and nginx are watched by supervisord. 
+
 - **Version 0.7**
   1. Upgrade php-fpm.
   2. Upgrade phpmyadmin.
