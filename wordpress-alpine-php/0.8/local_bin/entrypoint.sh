@@ -192,7 +192,7 @@ test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. cr
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
 # test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
 # test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
-if [ ! -d "home/etc/nginx" ]; then
+if [ ! -d "/home/etc/nginx" ]; then
     mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx
 else
     mv /etc/nginx /etc/nginx-bak

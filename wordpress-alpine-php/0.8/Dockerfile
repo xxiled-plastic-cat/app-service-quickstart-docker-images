@@ -34,8 +34,6 @@ COPY wordpress_src/. $WORDPRESS_SOURCE/
 COPY supervisord.conf /etc/
 # php
 COPY uploads.ini /usr/local/etc/php/conf.d/
-COPY www.conf /usr/local/etc/php-fpm.d/
-COPY php-fpm.conf /usr/local/etc/
 # nginx
 COPY default.conf /etc/nginx/conf.d/default.conf
 #
