@@ -238,6 +238,8 @@ echo "INFO: creating /run/php/php7.0-fpm.sock ..."
 test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
 mkdir -p /run/php && touch /run/php/php7.0-fpm.sock && chown www-data:www-data /run/php/php7.0-fpm.sock && chmod 777 /run/php/php7.0-fpm.sock
 
+sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config  
+
 echo "Starting SSH ..."
 echo "Starting php-fpm ..."
 echo "Starting Nginx ..."
