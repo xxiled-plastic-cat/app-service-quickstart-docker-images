@@ -408,7 +408,10 @@ RUN set -ex \
 	&& ln -s $NGINX_LOG_DIR /var/log/nginx \
 	##
 	&& rm -rf /var/log/supervisor \
-	&& ln -s $SUPERVISOR_LOG_DIR /var/log/supervisor 
+	&& ln -s $SUPERVISOR_LOG_DIR /var/log/supervisor \
+	## Just take care of nginx and php logs
+	&& rm -rf /etc/logrotate.d \
+	&& mkdir -p /etc/logrotate.d 
 # ssh
 COPY sshd_config /etc/ssh/ 
 # php
