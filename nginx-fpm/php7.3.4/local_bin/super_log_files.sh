@@ -3,7 +3,7 @@
 while [ 1 ]
 do 
     if [ -e /run/php/php-fpm.sock ]; then
-        echo "exist...chmod... "
+        #echo "exist...chmod... "
         chmod 777 /run/php/php-fpm.sock                      
     else            
         echo "INFO: It's not ready..."                        
