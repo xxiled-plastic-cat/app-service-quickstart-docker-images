@@ -1,4 +1,4 @@
-FROM appsvcorg/nginx-fpm:php7.2.13
+FROM appsvcorg/nginx-fpm:php7.3.4
 LABEL maintainer ="Azure App Service Container Images <appsvc-images@microsoft.com>"
 # ========
 # ENV vars
@@ -41,33 +41,11 @@ RUN set -ex \
 # install the PHP extensions we need
 # postgresql-dev is needed for https://bugs.alpinelinux.org/issues/3642
     && docker-php-source extract \
-    && apk add --no-cache                  \
-            --virtual .build-dependencies   \
-                $PHPIZE_DEPS                \
-                zlib-dev                    \
-                cyrus-sasl-dev              \
-                git                         \
-                autoconf                    \
-                g++                         \
-                libtool                     \
-                make                        \
-                pcre-dev                    \    
-            tini                            \
-            libintl                         \
-            icu                             \
-            icu-dev                         \
-            libxml2-dev                     \
-            postgresql-dev                  \
-            freetype-dev                    \
-            libjpeg-turbo-dev               \
-            libpng-dev                      \
-            gmp                             \
-            gmp-dev                         \
-            libmemcached-dev                \
-            imagemagick-dev                 \
-            libssh2                         \
-            libssh2-dev                     \
-            libxslt-dev                     \		                  
+    && apk add --no-cache --virtual .build-deps \
+		libjpeg-turbo-dev \
+		libpng-dev \
+        libzip-dev \
+        freetype-dev \			                  
 	&& docker-php-ext-configure gd \
 		--with-freetype-dir=/usr/include/ \
 		--with-jpeg-dir=/usr/include/ \
@@ -82,11 +60,11 @@ RUN set -ex \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 	)" \
 	&& apk add --virtual .drupal-phpexts-rundeps $runDeps \
-	&& apk del .build-dependencies \	
+	&& apk del .build-deps \	
 	&& docker-php-source delete \
     # session_save_path
     && mkdir -p /usr/local/php/tmp \
-    && chmod 777 /usr/local/php/tmp \
+    && chmod 777 /usr/local/php/tmp \	
 # -------------
 # 1. Drupal
 # -------------
@@ -116,18 +94,18 @@ RUN set -ex \
 # ~. clean up
 # ----------
 	&& apk upgrade \
-	&& rm -rf /var/cache/apk/* 
+	&& rm -rf /var/cache/apk/* \
+	&& rm -rf $DOCKER_BUILD_HOME \
+	&& rm -rf /etc/nginx/conf.d/default.conf 
 # =========
 # Configure
 # =========
 WORKDIR $DRUPAL_HOME
-RUN rm -rf $DOCKER_BUILD_HOME
 # mariadb
 COPY my.cnf /etc/mysql/
 # nginx
 COPY spec-settings.conf /etc/nginx/conf.d/
 COPY nginx.conf /etc/nginx/
-RUN rm -rf /etc/nginx/conf.d/default.conf
 # php
 COPY php.ini $PHP_CONF_FILE
 # drupal

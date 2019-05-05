@@ -9,17 +9,17 @@ You can find it in Docker hub here [https://hub.docker.com/r/appsvcorg/drupal-ng
 # Components
 This docker image currently contains the following components:
 1. Drupal (Git pull as you wish)
-2. nginx (1.14.0)
-3. PHP (7.2.13)
+2. nginx (1.15.8)
+3. PHP (7.3.4)
 4. Drush
-5. Composer (1.8.0)
-6. MariaDB ( 10.1.26/if using Local Database )
-7. Phpmyadmin ( 4.8.3/if using Local Database )
+5. Composer (1.8.5)
+6. MariaDB ( 10.1.38/if using Local Database )
+7. Phpmyadmin ( 4.8.4/if using Local Database )
 
 ## How to Deploy to Azure 
-1. Create a Web App for Containers, set Docker container as ```appsvcorg/drupal-nginx-fpm:0.5``` 
+1. Create a Web App for Containers, set Docker container as ```appsvcorg/drupal-nginx-fpm:0.6``` 
    OR: Create a Drupal on Linux Web App With MySQL.
-2. Add one App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` = 900
+2. Add one App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` = 1200
 3. Browse your site and wait almost 10 mins, you will see install page of Drupal.
 4. Complete Drupal install.
 
@@ -51,24 +51,26 @@ Name | Default Value
 DATABASE_TYPE | local
 DATABASE_USERNAME | some-string
 DATABASE_PASSWORD | some-string
+>Note: We create a database "azurelocaldb" when using local mysql . Hence use this name when setting up the app
+>
+>Note: Phpmyadmin site is deployed when using local mysql. Please go to 
+http://[website]/phpmyadmin, and login with DATABASE_USERNAME and DATABASE_PASSWORD.
+>
+4. Browse your site 
+5. Complete WordPress install
 
->Note: We create a database "azurelocaldb" when using local mysql. Hence use this name when setting up the app.
+>Note: Do not use the app setting DATABASE_TYPE=local if using Azure database for MySQL
 
-4. Browse http://[website]/phpmyadmin
-
-# How to turn on Xdebug to profile the app
+# How to turn on Xdebug
 1. By default Xdebug is turned off as turning it on impacts performance.
 2. Connect by SSH.
 3. Go to ```/usr/local/etc/php/conf.d```,  Update ```xdebug.ini``` as wish, don't modify the path of below line.
-```zend_extension=/usr/local/lib/php/extensions/no-debug-non-zts-20170718/xdebug.so```
+```zend_extension=/usr/local/lib/php/extensions/no-debug-non-zts-20180731/xdebug.so```
 4. Save ```xdebug.ini```, Restart php-fpm by below cmd:
 ```
-# find gid of php-fpm
-ps aux
 # Kill master process of php-fpm
 killall -9 php-fpm
-# start php-fpm again
-php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
+# php-fpm will be started by supervisor.
 ```
 5. Xdebug is turned on.
 
@@ -78,6 +80,10 @@ php-fpm -D && chmod 777 /run/php/php7.0-fpm.sock
 ```
 /usr/sbin/nginx -s reload
 ```
+## How to update config files of varinish
+1. Go to "/etc/varnish", update config files as your wish. 
+
+>You can find backup of default nginx/varnish configration at /etc/nginx-bak and /etc/varnish-bak
 
 ## Tips of Log rotate
 1. By default, log rotate is disabled if deploy this images to web app for containers of azure. It's enabled if you use this image by "docker run".
@@ -123,6 +129,10 @@ composer require drupal/adminimal_theme
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 1800, suggest to set it as 900 when using this version.
 
 ## Change Log
+- **Version 0.6**
+  1. Upgrade php-fpm/nginx/composer/mariadb/phpmyadmin
+  2. Add function log rotate. (It's disabed if deploy to web app of azure by default.)
+  3. Allow customer to use their own configration of nginx/varnish.   
 - **Version 0.5**
   1. Upgrade php-fpm/composer
   2. Upgrade phpmyadmin.

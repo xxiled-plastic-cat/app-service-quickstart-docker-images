@@ -18,6 +18,7 @@ acl purge {
 
 # Respond to incoming requests.
 sub vcl_recv {
+    # Add locations of phpmyadmin here. 
     # Add an X-Forwarded-For header with the client IP address.
     if (req.restarts == 0) {
         if (req.http.X-Forwarded-For) {

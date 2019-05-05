@@ -57,10 +57,10 @@ start_mariadb(){
 setup_phpmyadmin(){
     test ! -d "$PHPMYADMIN_HOME" && echo "INFO: $PHPMYADMIN_HOME not found. creating..." && mkdir -p "$PHPMYADMIN_HOME"
     cd $PHPMYADMIN_SOURCE
-    tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME/ --strip-components=1
-    cp -R phpmyadmin-default.conf /etc/nginx/nginx.conf    
-    cp -R phpmyadmin-config.inc.php $PHPMYADMIN_HOME/config.inc.php
-    cp -R default.phpmyadmin.vcl /etc/varnish/default.vcl    
+    tar -xf phpMyAdmin.tar.gz -C $PHPMYADMIN_HOME/ --strip-components=1    
+    sed -i "/# Add locations of phpmyadmin here./r $PHPMYADMIN_SOURCE/phpmyadmin-locations.txt" /etc/nginx/nginx.conf    
+    sed -i "/# Add locations of phpmyadmin here./r $PHPMYADMIN_SOURCE/phpmyadmin-vcl.txt" /etc/varnish/default.vcl    
+    cp -R phpmyadmin-config.inc.php $PHPMYADMIN_HOME/config.inc.php    
 	cd /
     rm -Rf $PHPMYADMIN_SOURCE
     if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
@@ -210,12 +210,15 @@ if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
 fi   
 
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
+test ! -d "$VARNISH_LOG_DIR" && echo "INFO: Log folder for varnish found. creating..." && mkdir -p "$VARNISH_LOG_DIR"
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
 # Backup default nginx setting, use customer's nginx setting
 test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
 test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
-test ! -d "$VARNISH_LOG_DIR" && echo "INFO: Log folder for varnish found. creating..." && mkdir -p "$VARNISH_LOG_DIR"
+# Backup default varnish setting, use customer's nginx setting
+test -d "/home/etc/varnish" && mv /etc/varnish /etc/varnish-bak && ln -s /home/etc/varnish /etc/varnish
+test ! -d "home/etc/varnish" && mkdir -p /home/etc && mv /etc/varnish /home/etc/varnish && ln -s /home/etc/varnish /etc/varnish
 
 echo "Starting Varnishd ..."
 /usr/sbin/varnishd -a :80 -f /etc/varnish/default.vcl
