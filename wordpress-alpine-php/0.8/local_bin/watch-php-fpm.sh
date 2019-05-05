@@ -27,7 +27,8 @@ do
             # date >> /var/log/php_fpm/watch.log
             # echo "Start to KILL!"
             # # STAT D has keep for 15 secs.
-            killall -9 php-fpm  
+            killall -9 php-fpm
+            killall -9 nginx  
         fi    
     fi
     sleep 3s

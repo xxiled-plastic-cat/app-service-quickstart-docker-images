@@ -35,9 +35,9 @@ COPY supervisord.conf /etc/
 # php
 COPY uploads.ini /usr/local/etc/php/conf.d/
 # nginx
-COPY default.conf /etc/nginx/conf.d/default.conf
+COPY nginx_conf/. /etc/nginx/conf.d/
 #
 COPY local_bin/. /usr/local/bin/
 RUN chmod -R +x /usr/local/bin
-EXPOSE 2222 80
+EXPOSE $SSH_PORT 80
 ENTRYPOINT ["entrypoint.sh"]

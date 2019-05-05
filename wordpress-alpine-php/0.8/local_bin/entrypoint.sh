@@ -62,7 +62,7 @@ setup_phpmyadmin(){
     # rm -rf $PHPMYADMIN_SOURCE
     if [ ! $AZURE_DETECTED ]; then
         echo "INFO: NOT in Azure, chown for "$PHPMYADMIN_HOME  
-        chown -R www-data:www-data $PHPMYADMIN_HOME
+        chown -R nginx:nginx $PHPMYADMIN_HOME
     fi 
 }    
 
@@ -93,7 +93,7 @@ setup_wordpress(){
     fi
 	
 	# Although in AZURE, we still need below chown cmd.
-    chown -R www-data:www-data $WORDPRESS_HOME    
+    chown -R nginx:nginx $WORDPRESS_HOME    
 }
 
 update_localdb_config(){    
@@ -148,7 +148,7 @@ fi
 chmod 777 $WORDPRESS_SOURCE/wp-config.php
 if [ ! $AZURE_DETECTED ]; then 
     echo "INFO: NOT in Azure, chown for wp-config.php"
-    chown -R www-data:www-data $WORDPRESS_SOURCE/wp-config.php
+    chown -R nginx:nginx $WORDPRESS_SOURCE/wp-config.php
 fi
 
 #IF App settings of DB are exist, Use Special wp-config file.    
@@ -176,7 +176,7 @@ fi
 # setup server root
 if [ ! $AZURE_DETECTED ]; then 
     echo "INFO: NOT in Azure, chown for "$WORDPRESS_HOME 
-    chown -R www-data:www-data $WORDPRESS_HOME
+    chown -R nginx:nginx $WORDPRESS_HOME
 fi
 
 echo "Starting Redis ..."
@@ -213,7 +213,7 @@ echo "INFO: creating /run/php/php-fpm.sock ..."
 test -e /run/php/php-fpm.sock && rm -f /run/php/php-fpm.sock
 mkdir -p /run/php
 touch /run/php/php-fpm.sock
-chown www-data:www-data /run/php/php-fpm.sock
+chown nginx:nginx /run/php/php-fpm.sock
 chmod 777 /run/php/php-fpm.sock
 
 sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config
