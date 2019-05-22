@@ -1,3 +1,15 @@
+# Most Important Thing:
+- This is fastest version when deploy as azure app service. 
+- With this version, Only keep below folders persist, not whole project.
+  - ../web/sites
+  - ../web/modules
+  - ../web/themes
+
+- How about we need to modify some core codes and we also need them to be keep persist? 
+  - fork the default git repo/branch, modify as your wish.
+  - Add Git parameters in app setting of web app for containers. [More-Information](#git-information)
+  - Use "git push" to keep your valuable codes.
+
 # Drupal-nginx-php Docker
 This is a Drupal Docker image which can run on both 
  - [Azure Web App on Linux](https://docs.microsoft.com/en-us/azure/app-service-web/app-service-linux-intro)
@@ -17,11 +29,16 @@ This docker image currently contains the following components:
 7. Phpmyadmin ( 4.8.4/if using Local Database )
 
 ## How to Deploy to Azure 
-1. Create a Web App for Containers, set Docker container as ```appsvcorg/drupal-nginx-fpm:0.6``` 
+1. Create a Web App for Containers, set Docker container as ```appsvcorg/drupal-nginx-fpm:0.6-part-persist``` 
    OR: Create a Drupal on Linux Web App With MySQL.
 2. Add one App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` = 1200
-3. Browse your site and wait almost 10 mins, you will see install page of Drupal.
-4. Complete Drupal install.
+3. Set ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true
+4. Add Git parameters in App Setting. [More-Information](#git-information)
+5. Add DB parameters in App Setting. [More-Information](#db-information)
+6. Browse your site and wait almost 10 mins, you will see install page of Drupal.
+7. Complete Drupal install.
+
+<h2 id='git-information'></h2>
 
 ## How to configure GIT Repo and Branch
 1. Create a Web App for Containers
@@ -34,12 +51,23 @@ GIT_BRANCH | master
 
 4. Browse your site
 
->Note: GIT directory: /home/drupal_prj.
->Note: root: /home/site/wwwroot -> /home/drupal_prj/web
->Note: ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = false, Before restart web app, need to store your changes by "git push", it will be pulled again after restart.
->
->Note: ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true, and /home/site/wwwroot/sites/default/settings.php is exist, it will not pull again after restart.
+>Note: GIT directory: /var/drupal_prj.
+>Note: root: /var/www/html -> /var/drupal_prj/web
 
+<h2 id='db-information'></h2>
+
+## How to configure to use Azure database for MySQL 
+1. Create a Azure database for MySQL
+2. Set ```Enforce SSL connection``` = Disabled
+3. Add new Firewall rules, START IP = 0.0.0.0, END IP = 255.255.255.255
+4. Go to Web App for Containers, Add new App Settings 
+
+Name | Default Value
+---- | -------------
+DATABASE_HOST | some-string
+DATABASE_NAME | some-string
+DATABASE_USERNAME | some-string
+DATABASE_PASSWORD | some-string
 
 ## How to configure to use Local Database with web app 
 1. Create a Web App for Containers 
@@ -56,9 +84,6 @@ DATABASE_PASSWORD | some-string
 >Note: Phpmyadmin site is deployed when using local mysql. Please go to 
 http://[website]/phpmyadmin, and login with DATABASE_USERNAME and DATABASE_PASSWORD.
 >
-4. Browse your site 
-5. Complete WordPress install
-
 >Note: Do not use the app setting DATABASE_TYPE=local if using Azure database for MySQL
 
 # How to turn on Xdebug
@@ -99,21 +124,6 @@ logrotate /etc/logrotate.conf
 
 # Updating Drupal version , themes , files 
 
-If ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = false  ( which is the default setting ), we recommend you DO NOT update the Drupal core version, themes or files.
-
-There is a tradeoff between file server stability and file persistence. Choose either one option to updated your files:
-
-##### OPTION 1 : 
-Since we are using local storage for better stability for the web app , you will not get file persistence.  In this case , we recommend to follow these steps to update WordPress Core  or a theme or a Plugins version:
-1.	Fork the repo https://github.com/azureappserviceoss/drupalcms-composer-azure
-2.	Clone your repo locally
-3.	Download the latest version of Drupal , plugin or theme being used locally
-4.	Commit the latest version bits into local folder of your cloned repo
-5.	Push your changes to the your forked repo
-6.	Login to Azure portal and select your web app
-7.	Click on Application Settings -> App Settings and change GIT_REPO to use your repository from step #1. If you haven't changed the branch name, you can continue to use linuxapservice. If you wish to use a different branch, update GIT_BRANCH setting as well.
-
-##### OPTION 2 :
 You can update ```WEBSITES_ENABLE_APP_SERVICE_STORAGE``` = true  to enable app service storage to have file persistence. Note when there are issues with storage  due to networking or when app service platform is being updated, your app can be impacted.
 You can use below composer cmds to install theme/modules. 
 
@@ -129,6 +139,11 @@ composer require drupal/adminimal_theme
 - Deploy to Azure, Pull and run this image need some time, You can include App Setting ```WEBSITES_CONTAINER_START_TIME_LIMIT``` to specify the time in seconds as need, Default is 240 and max is 1800, suggest to set it as 900 when using this version.
 
 ## Change Log
+- **Version 0.6-part-persist**
+  1. Only keep below folders persist, not whole project. The purpose is imporve the performance when deploy as azure app service.
+  - ../web/sites
+  - ../web/modules
+  - ../web/themes  
 - **Version 0.6**
   1. Upgrade php-fpm/nginx/composer/mariadb/phpmyadmin
   2. Add function log rotate. (It's disabed if deploy to web app of azure by default.)
