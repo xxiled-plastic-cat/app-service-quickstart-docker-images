@@ -65,7 +65,7 @@ setup_phpmyadmin(){
     rm -Rf $PHPMYADMIN_SOURCE
     if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
         echo "INFO: NOT in Azure, chown for "$PHPMYADMIN_HOME  
-        chown -R www-data:www-data $PHPMYADMIN_HOME
+        chown -R nginx:nginx $PHPMYADMIN_HOME
     fi
 }
 
@@ -136,7 +136,7 @@ setup_drupal(){
 
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
     echo "INFO: NOT in Azure, chown for "$DRUPAL_HOME 
-    chown -R www-data:www-data $DRUPAL_HOME
+    chown -R nginx:nginx $DRUPAL_HOME
 fi
 
 echo "Setup openrc ..." && openrc && touch /run/openrc/softlevel
@@ -201,7 +201,7 @@ fi
 
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
     echo "INFO: NOT in Azure, chown for "$DRUPAL_PRJ  
-    chown -R www-data:www-data $DRUPAL_PRJ 
+    chown -R nginx:nginx $DRUPAL_PRJ 
 fi
 
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
@@ -215,17 +215,17 @@ test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. cr
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
 # Backup default nginx setting, use customer's nginx setting
 test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
-test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
+test ! -d "/home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
 # Backup default varnish setting, use customer's nginx setting
 test -d "/home/etc/varnish" && mv /etc/varnish /etc/varnish-bak && ln -s /home/etc/varnish /etc/varnish
-test ! -d "home/etc/varnish" && mkdir -p /home/etc && mv /etc/varnish /home/etc/varnish && ln -s /home/etc/varnish /etc/varnish
+test ! -d "/home/etc/varnish" && mkdir -p /home/etc && mv /etc/varnish /home/etc/varnish && ln -s /home/etc/varnish /etc/varnish
 
 echo "Starting Varnishd ..."
 /usr/sbin/varnishd -a :80 -f /etc/varnish/default.vcl
 
 echo "INFO: creating /run/php/php7.0-fpm.sock ..."
 test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
-mkdir -p /run/php && touch /run/php/php7.0-fpm.sock && chown www-data:www-data /run/php/php7.0-fpm.sock && chmod 777 /run/php/php7.0-fpm.sock
+mkdir -p /run/php && touch /run/php/php7.0-fpm.sock && chown nginx:nginx /run/php/php7.0-fpm.sock && chmod 777 /run/php/php7.0-fpm.sock
 
 
 sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config  
