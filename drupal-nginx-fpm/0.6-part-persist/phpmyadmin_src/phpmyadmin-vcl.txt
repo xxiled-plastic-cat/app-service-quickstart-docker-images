@@ -1,3 +1,0 @@
-    if (req.url ~ "(phpMyAdmin|phpmyadmin|phpMyAdmin/setup)") {
-        return (pass);
-    }

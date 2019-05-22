@@ -65,7 +65,7 @@ setup_phpmyadmin(){
     rm -Rf $PHPMYADMIN_SOURCE
     if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
         echo "INFO: NOT in Azure, chown for "$PHPMYADMIN_HOME  
-        chown -R www-data:www-data $PHPMYADMIN_HOME
+        chown -R nginx:nginx $PHPMYADMIN_HOME
     fi
 }
 
@@ -136,7 +136,7 @@ setup_drupal(){
 
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then 
     echo "INFO: NOT in Azure, chown for "$DRUPAL_HOME 
-    chown -R www-data:www-data $DRUPAL_HOME
+    chown -R nginx:nginx $DRUPAL_HOME
 fi
 
 echo "Setup openrc ..." && openrc && touch /run/openrc/softlevel
@@ -201,7 +201,7 @@ fi
 
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
     echo "INFO: NOT in Azure, chown for "$DRUPAL_PRJ  
-    chown -R www-data:www-data $DRUPAL_PRJ 
+    chown -R nginx:nginx $DRUPAL_PRJ 
 fi
 
 if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
@@ -209,6 +209,18 @@ if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
     crond
 fi   
 
+# Persist drupal/sites, modules, themes
+test -d "/home/sites" && mv $DRUPAL_PRJ/web/sites $DRUPAL_PRJ/web/sites-bak  
+test ! -d "/home/sites" && mv $DRUPAL_PRJ/web/sites /home/sites 
+ln -s /home/sites $DRUPAL_PRJ/web/sites
+test -d "/home/modules" && mv $DRUPAL_PRJ/web/modules $DRUPAL_PRJ/web/modules-bak  
+test ! -d "/home/modules" && mv $DRUPAL_PRJ/web/modules /home/modules 
+ln -s /home/modules $DRUPAL_PRJ/web/modules
+test -d "/home/themes" && mv $DRUPAL_PRJ/web/themes $DRUPAL_PRJ/web/themes-bak  
+test ! -d "/home/themes" && mv $DRUPAL_PRJ/web/themes /home/themes 
+ln -s /home/themes $DRUPAL_PRJ/web/themes
+
+# Create Log folders
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
 test ! -d "$VARNISH_LOG_DIR" && echo "INFO: Log folder for varnish found. creating..." && mkdir -p "$VARNISH_LOG_DIR"
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
@@ -223,9 +235,9 @@ test ! -d "home/etc/varnish" && mkdir -p /home/etc && mv /etc/varnish /home/etc/
 echo "Starting Varnishd ..."
 /usr/sbin/varnishd -a :80 -f /etc/varnish/default.vcl
 
-echo "INFO: creating /run/php/php7.0-fpm.sock ..."
+echo "INFO: creating /run/php/php-fpm.sock ..."
 test -e /run/php/php7.0-fpm.sock && rm -f /run/php/php7.0-fpm.sock
-mkdir -p /run/php && touch /run/php/php7.0-fpm.sock && chown www-data:www-data /run/php/php7.0-fpm.sock && chmod 777 /run/php/php7.0-fpm.sock
+mkdir -p /run/php && touch /run/php/php-fpm.sock && chown nginx:nginx /run/php/php-fpm.sock && chmod 777 /run/php/php-fpm.sock
 
 
 sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config  
