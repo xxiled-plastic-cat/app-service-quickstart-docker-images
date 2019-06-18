@@ -209,6 +209,7 @@ if [ ! $WEBSITES_ENABLE_APP_SERVICE_STORAGE ]; then
     crond
 fi   
 
+test ! -d /home/apache-solr && mkdir /home/apache-solr && tar -xf /usr/src/apache-solr.tgz -C /home/apache-solr/ --strip-components=1 
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
 test ! -d "$VARNISH_LOG_DIR" && echo "INFO: Log folder for varnish found. creating..." && mkdir -p "$VARNISH_LOG_DIR"
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for nginx/php not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
@@ -230,6 +231,8 @@ mkdir -p /run/php && touch /run/php/php7.0-fpm.sock && chown nginx:nginx /run/ph
 
 sed -i "s/SSH_PORT/$SSH_PORT/g" /etc/ssh/sshd_config  
 
+echo "Starting Apache Solr Server ..."
+cd /home/apache-solr/solr/example && java -jar start.jar &
 
 echo "Starting SSH ..."
 echo "Starting php-fpm ..."
