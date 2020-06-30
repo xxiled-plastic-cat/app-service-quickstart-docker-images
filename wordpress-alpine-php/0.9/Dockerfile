@@ -7,6 +7,9 @@ LABEL MAINTAINER Azure App Service Container Images <appsvc-images@microsoft.com
 # ENV vars
 # ========
 # ssh
+
+ENV SUPERVISOR_LOG_DIR "/var/log/supervisorlocal"
+
 ENV SSH_PASSWD "root:Docker!"
 ENV SSH_PORT 2222
 #nginx
