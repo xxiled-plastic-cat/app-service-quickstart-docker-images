@@ -38,7 +38,12 @@ COPY supervisord.conf /etc/
 # php
 COPY uploads.ini /usr/local/etc/php/conf.d/
 # nginx
-COPY nginx_conf/. /etc/nginx/conf.d/
+
+# override nginx config
+COPY nginx_conf/nginx.conf /etc/nginx/nginx.conf
+COPY nginx_conf/default.conf /etc/nginx/conf.d/default.conf
+COPY nginx_conf/spec-settings.conf /etc/nginx/conf.d/spec-settings.conf
+
 #
 COPY local_bin/. /usr/local/bin/
 RUN chmod -R +x /usr/local/bin
