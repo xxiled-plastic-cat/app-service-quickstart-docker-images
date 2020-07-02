@@ -200,6 +200,14 @@ if [ "$DATABASE_TYPE" == "local" ]; then
     fi
 fi
 
+#
+# Remove symlinks to /home/LogFiles
+#
+echo "Removing symlinks to /home/LogFiles"
+unlink /var/log/nginx
+unlink /var/log/mysql
+unlink /var/log/supervisord
+
 echo "INFO: creating /run/php/php-fpm.sock ..."
 test -e /run/php/php-fpm.sock && rm -f /run/php/php-fpm.sock
 mkdir -p /run/php
