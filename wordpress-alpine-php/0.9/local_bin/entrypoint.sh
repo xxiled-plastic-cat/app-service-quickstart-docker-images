@@ -186,6 +186,14 @@ if [ ! $AZURE_DETECTED ]; then
     crond	
 fi 
 
+#
+# Remove symlinks to /home/LogFiles
+#
+echo "Removing symlinks to /home/LogFiles"
+unlink /var/log/nginx
+unlink /var/log/mysql
+unlink /var/log/supervisor
+
 test ! -d "$SUPERVISOR_LOG_DIR" && echo "INFO: $SUPERVISOR_LOG_DIR not found. creating ..." && mkdir -p "$SUPERVISOR_LOG_DIR"
 test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for $NGINX_LOG_DIR not found. creating..." && mkdir -p "$NGINX_LOG_DIR"
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
@@ -199,14 +207,6 @@ if [ "$DATABASE_TYPE" == "local" ]; then
         sed -i "/# Add locations of phpmyadmin here./r $PHPMYADMIN_SOURCE/phpmyadmin-locations.txt" /etc/nginx/conf.d/default.conf
     fi
 fi
-
-#
-# Remove symlinks to /home/LogFiles
-#
-echo "Removing symlinks to /home/LogFiles"
-unlink /var/log/nginx
-unlink /var/log/mysql
-unlink /var/log/supervisord
 
 echo "INFO: creating /run/php/php-fpm.sock ..."
 test -e /run/php/php-fpm.sock && rm -f /run/php/php-fpm.sock
