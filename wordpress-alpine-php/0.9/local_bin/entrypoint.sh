@@ -191,14 +191,6 @@ test ! -d "$NGINX_LOG_DIR" && echo "INFO: Log folder for $NGINX_LOG_DIR not foun
 test ! -e /home/50x.html && echo "INFO: 50x file not found. createing..." && cp /usr/share/nginx/html/50x.html /home/50x.html
 # test -d "/home/etc/nginx" && mv /etc/nginx /etc/nginx-bak && ln -s /home/etc/nginx /etc/nginx
 # test ! -d "home/etc/nginx" && mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx && ln -s /home/etc/nginx /etc/nginx
-if [ ! -d "/home/etc/nginx" ]; then
-    mkdir -p /home/etc && mv /etc/nginx /home/etc/nginx
-else
-    mv /etc/nginx /etc/nginx-bak
-    # Is it upgrade from 0.72? 
-    sed -i "s/php7.0-fpm.sock/php-fpm.sock/g" /home/etc/nginx/conf.d/default.conf
-fi
-ln -s /home/etc/nginx /etc/nginx
 
 #Just In Case, use external DB before, change to Local DB this time.
 if [ "$DATABASE_TYPE" == "local" ]; then
