@@ -13,14 +13,14 @@ ENV SUPERVISOR_LOG_DIR "/var/log/supervisorlocal"
 ENV SSH_PASSWD "root:Docker!"
 ENV SSH_PORT 2222
 #nginx
-ENV NGINX_LOG_DIR "/var/log/nginx"
+ENV NGINX_LOG_DIR "/var/log/nginxlocal"
 #php
 ENV PHP_HOME "/usr/local/etc/php"
 ENV PHP_CONF_DIR $PHP_HOME
 ENV PHP_CONF_FILE $PHP_CONF_DIR"/php.ini"
 # mariadb
 ENV MARIADB_DATA_DIR "/home/data/mysql"
-ENV MARIADB_LOG_DIR "/var/log/mysql"
+ENV MARIADB_LOG_DIR "/var/log/mysqllocal"
 # phpmyadmin
 ENV PHPMYADMIN_SOURCE "/usr/src/phpmyadmin"
 ENV PHPMYADMIN_HOME "/home/phpmyadmin"
